@@ -177,6 +177,9 @@ let state = loadState();
 let currentFilter = "all";
 let recommendationOffset = 0;
 let toastTimer;
+let selectedMood = "";
+let currentFortuneBook = null;
+let fortuneTimer;
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -250,6 +253,7 @@ function openModal(id) {
 }
 
 function closeModal() {
+  clearTimeout(fortuneTimer);
   $("#modal-layer").classList.remove("open");
   $("#modal-layer").setAttribute("aria-hidden", "true");
   $$(".modal").forEach(modal => modal.classList.remove("active"));
@@ -649,19 +653,63 @@ function saveSuggestedBook(book) {
   showToast("「読みたい本」に追加しました。");
 }
 
-function showMoodResult(mood) {
+function prepareFortune() {
+  selectedMood = "";
+  currentFortuneBook = null;
+  clearTimeout(fortuneTimer);
+  $("#draw-select-step").classList.add("active");
+  $("#draw-ready-step").classList.remove("active");
+  $(".draw-window").classList.remove("drawing", "revealed");
+  $("#fortune-result").innerHTML = "";
+  $$("#mood-options button").forEach(button => button.classList.remove("active"));
+  openModal("mood-modal");
+}
+
+function selectMood(mood) {
+  selectedMood = mood;
   $$("#mood-options button").forEach(button => button.classList.toggle("active", button.dataset.mood === mood));
+  $("#selected-mood-label").textContent = `${mood}な一冊`;
+  setTimeout(() => {
+    $("#draw-select-step").classList.remove("active");
+    $("#draw-ready-step").classList.add("active");
+  }, 260);
+}
+
+function chooseFortuneBook(mood) {
   const candidates = [...recommendationPool, ...newBooks].filter(book => book.tone.includes(mood));
-  const book = candidates[Math.floor(Math.random() * candidates.length)] || recommendationPool[0];
-  const owned = findDuplicate(book.title);
-  $("#mood-result").innerHTML = `
-    <p class="eyebrow">ONE BOOK FOR THIS FEELING</p>
-    <h3>${escapeHtml(book.title)}</h3>
-    <span>${escapeHtml(book.author)} / ${escapeHtml(book.genre)}</span>
-    <p>${escapeHtml(book.reason || book.description)}</p>
-    <button class="text-button" data-action="mood-save" data-title="${escapeHtml(book.title)}">${owned ? "本棚にあります ✓" : "気になる本へ ＋"}</button>
+  const alternatives = candidates.filter(book => book.title !== currentFortuneBook?.title);
+  const pool = alternatives.length ? alternatives : candidates;
+  return pool[Math.floor(Math.random() * pool.length)] || recommendationPool[0];
+}
+
+function drawFortune() {
+  if (!selectedMood) return;
+  const windowElement = $(".draw-window");
+  currentFortuneBook = chooseFortuneBook(selectedMood);
+  const owned = findDuplicate(currentFortuneBook.title);
+  $("#fortune-result").innerHTML = `
+    <div class="fortune-cover" style="--cover:${currentFortuneBook.color}">
+      <strong>${escapeHtml(currentFortuneBook.title)}</strong>
+    </div>
+    <div class="fortune-copy">
+      <p class="eyebrow">TODAY'S BOOK FORTUNE / ${escapeHtml(selectedMood)}</p>
+      <h3>${escapeHtml(currentFortuneBook.title)}</h3>
+      <span>${escapeHtml(currentFortuneBook.author)} / ${escapeHtml(currentFortuneBook.genre)}</span>
+      <p>${escapeHtml(currentFortuneBook.reason || currentFortuneBook.description)}</p>
+      <div class="fortune-actions">
+        <button class="primary-button" data-action="fortune-save">${owned ? "本棚にあります ✓" : "読みたい本へ ＋"}</button>
+        <button class="text-button" data-action="draw-again">もう一度引く</button>
+      </div>
+    </div>
   `;
-  $("#mood-result").classList.add("visible");
+  windowElement.classList.remove("revealed");
+  windowElement.classList.add("drawing");
+  $("#draw-fortune").disabled = true;
+  fortuneTimer = setTimeout(() => {
+    windowElement.classList.remove("drawing");
+    windowElement.classList.add("revealed");
+    $("#draw-fortune").disabled = false;
+  }, 1850);
 }
 
 function handleAction(target) {
@@ -678,9 +726,12 @@ function handleAction(target) {
     actionTarget.parentElement.hidden = true;
     $(`#spoiler-${id}`).hidden = false;
   }
-  if (action === "mood-save") {
-    const book = [...recommendationPool, ...newBooks].find(item => item.title === actionTarget.dataset.title);
-    if (book) saveSuggestedBook(book);
+  if (action === "fortune-save" && currentFortuneBook) {
+    saveSuggestedBook(currentFortuneBook);
+    closeModal();
+  }
+  if (action === "draw-again") {
+    drawFortune();
   }
 }
 
@@ -690,7 +741,7 @@ $("#library-add-book").addEventListener("click", () => prepareBookForm());
 $("#hero-add-record").addEventListener("click", () => prepareRecordForm());
 $("#journal-add-record").addEventListener("click", () => prepareRecordForm());
 $("#open-review").addEventListener("click", () => prepareReviewForm());
-$("#open-mood").addEventListener("click", () => openModal("mood-modal"));
+$("#open-mood").addEventListener("click", prepareFortune);
 $$("[data-close-modal]").forEach(button => button.addEventListener("click", closeModal));
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" && $("#modal-layer").classList.contains("open")) closeModal();
@@ -730,7 +781,15 @@ $("#duplicate-form").addEventListener("submit", event => {
 });
 $("#mood-options").addEventListener("click", event => {
   const button = event.target.closest("[data-mood]");
-  if (button) showMoodResult(button.dataset.mood);
+  if (button) selectMood(button.dataset.mood);
+});
+$("#draw-fortune").addEventListener("click", drawFortune);
+$("#back-to-moods").addEventListener("click", () => {
+  clearTimeout(fortuneTimer);
+  $(".draw-window").classList.remove("drawing", "revealed");
+  $("#draw-ready-step").classList.remove("active");
+  $("#draw-select-step").classList.add("active");
+  currentFortuneBook = null;
 });
 
 const initialView = ["home", "library", "journal", "reviews"].includes(location.hash.slice(1))

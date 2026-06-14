@@ -318,20 +318,51 @@
         </form>
       </section>
 
-      <section class="modal mood-modal" id="mood-modal" role="dialog" aria-modal="true" aria-labelledby="mood-modal-title">
-        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
-        <p class="eyebrow">FIND BY FEELING</p>
-        <h2 id="mood-modal-title">今日は、どんな読書を。</h2>
-        <p>ジャンルではなく、読み終えたあとに欲しい感覚を選んでください。</p>
-        <div class="mood-options" id="mood-options">
-          <button data-mood="静か">静かでいたい</button>
-          <button data-mood="不穏">少し不穏なもの</button>
-          <button data-mood="遠く">遠くへ行きたい</button>
-          <button data-mood="やさしい">やさしさが欲しい</button>
-          <button data-mood="鋭い">短く鋭いもの</button>
-          <button data-mood="考える">ゆっくり考えたい</button>
+      <section class="modal draw-modal" id="mood-modal" role="dialog" aria-modal="true" aria-labelledby="mood-modal-title">
+        <button class="draw-close" data-close-modal aria-label="選書を閉じる">
+          <span>白い部屋へ戻る</span><i>×</i>
+        </button>
+
+        <div class="draw-step active" id="draw-select-step">
+          <div class="draw-step-copy">
+            <p class="eyebrow">A BOOK FORTUNE FOR TODAY</p>
+            <span class="draw-number">01</span>
+            <h2 id="mood-modal-title">今日の気配を、<br />ひとつだけ。</h2>
+            <p>ジャンルではなく、読み終えたあとに欲しい感覚を選んでください。</p>
+          </div>
+          <div class="mood-options" id="mood-options">
+            <button data-mood="静か"><small>STILLNESS</small>静かでいたい</button>
+            <button data-mood="不穏"><small>UNEASINESS</small>少し不穏なもの</button>
+            <button data-mood="遠く"><small>DISTANCE</small>遠くへ行きたい</button>
+            <button data-mood="やさしい"><small>WARMTH</small>やさしさが欲しい</button>
+            <button data-mood="鋭い"><small>SHARPNESS</small>短く鋭いもの</button>
+            <button data-mood="考える"><small>THOUGHT</small>ゆっくり考えたい</button>
+          </div>
         </div>
-        <div id="mood-result" class="mood-result"></div>
+
+        <div class="draw-step" id="draw-ready-step">
+          <div class="draw-window">
+            <div class="frost-pane frost-pane-left"></div>
+            <div class="frost-pane frost-pane-right"></div>
+            <div class="draw-mark" aria-hidden="true"><i></i><b></b></div>
+            <div class="draw-ready-copy">
+              <p class="eyebrow">YOUR BOOK FORTUNE IS READY</p>
+              <span id="selected-mood-label">静かな一冊</span>
+              <h2>霜の向こうから、<br />一冊を引く。</h2>
+              <button id="draw-fortune" class="draw-fortune-button">
+                <span>一冊を引く</span><i>↗</i>
+              </button>
+              <small>同じ気配から、偶然に一冊を選びます</small>
+            </div>
+            <div class="drawing-copy" aria-live="polite">
+              <span>SELECTING</span>
+              <p>ページの気配をたどっています</p>
+              <i></i>
+            </div>
+            <div id="fortune-result" class="fortune-result" aria-live="polite"></div>
+          </div>
+          <button class="back-to-moods" id="back-to-moods">← 気配を選び直す</button>
+        </div>
       </section>
     </div>
 

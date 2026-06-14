@@ -1114,11 +1114,13 @@ function codeLabelFor(category) {
   })[category] || "EXAMPLE";
 }
 
-function keywordCards(items = keywords) {
+const LIBRARY_PAGE_SIZE = 6;
+
+function keywordCards(items = keywords, startIndex = 0) {
   return items.map((item, index) => `
     <article class="keyword-card" data-keyword="${item.id}" tabindex="0">
       <div>
-      <span class="card-number">${item.level ? "QUICK" : "GUIDE"}_${String(index + 1).padStart(2, "0")}</span>
+      <span class="card-number">${item.level ? "QUICK" : "GUIDE"}_${String(startIndex + index + 1).padStart(2, "0")}</span>
         <span class="category-label">${escapeHtml(item.category)}</span>
       </div>
       <h3>${escapeHtml(item.title)}</h3>
@@ -1243,7 +1245,7 @@ function weeklyFeature(article) {
   `;
 }
 
-function renderLibrary(query = "") {
+function renderLibrary(query = "", requestedPage = 1) {
   const categories = ["すべて", ...new Set(keywords.map(item => item.category))];
   const normalized = query.toLowerCase();
   const filtered = keywords.filter(item => {
@@ -1251,6 +1253,17 @@ function renderLibrary(query = "") {
     const haystack = `${item.title} ${item.category} ${item.summary}`.toLowerCase();
     return matchesFilter && haystack.includes(normalized);
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIBRARY_PAGE_SIZE));
+  const page = Math.min(Math.max(Number(requestedPage) || 1, 1), totalPages);
+  const startIndex = (page - 1) * LIBRARY_PAGE_SIZE;
+  const pageItems = filtered.slice(startIndex, startIndex + LIBRARY_PAGE_SIZE);
+  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1)
+    .filter(number => number === 1 || number === totalPages || Math.abs(number - page) <= 1);
+  const pageButtons = visiblePages.map((number, index) => {
+    const previous = visiblePages[index - 1];
+    const gap = previous && number - previous > 1 ? `<span class="page-gap">…</span>` : "";
+    return `${gap}<button class="page-number ${number === page ? "active" : ""}" data-library-page="${number}" ${number === page ? 'aria-current="page"' : ""}>${number}</button>`;
+  }).join("");
 
   return `
     <div class="view">
@@ -1268,7 +1281,18 @@ function renderLibrary(query = "") {
         <div class="filter-bar">
           ${categories.map(category => `<button class="chip ${currentFilter === category ? "active" : ""}" data-filter="${category}">${category}</button>`).join("")}
         </div>
-        ${filtered.length ? `<div class="card-grid">${keywordCards(filtered)}</div>` : `<div class="empty-state"><h3>まだ、その寄り道はありません。</h3><p>管理画面から新しいキーワードを追加できます。</p></div>`}
+        ${filtered.length ? `
+          <div class="library-summary">
+            <span>${filtered.length}件中 ${startIndex + 1}〜${Math.min(startIndex + LIBRARY_PAGE_SIZE, filtered.length)}件</span>
+            <span>${page} / ${totalPages}ページ</span>
+          </div>
+          <div class="card-grid">${keywordCards(pageItems, startIndex)}</div>
+          <nav class="pagination" aria-label="キーワード図鑑のページ">
+            <button class="page-move" data-library-page="${page - 1}" ${page === 1 ? "disabled" : ""}>前へ</button>
+            <div class="page-numbers">${pageButtons}</div>
+            <button class="page-move" data-library-page="${page + 1}" ${page === totalPages ? "disabled" : ""}>次へ</button>
+          </nav>
+        ` : `<div class="empty-state"><h3>まだ、その寄り道はありません。</h3><p>管理画面から新しいキーワードを追加できます。</p></div>`}
       </section>
     </div>
   `;
@@ -1596,11 +1620,12 @@ function renderAdmin() {
   `;
 }
 
-function routeUrl(route, id, query = "") {
+function routeUrl(route, id, query = "", page = 1) {
   const params = new URLSearchParams();
   if (route && route !== "home") params.set("view", route);
   if (id) params.set("id", id);
   if (query) params.set("q", query);
+  if (route === "library" && page > 1) params.set("page", page);
   const search = params.toString();
   return `${window.location.pathname}${search ? `?${search}` : ""}`;
 }
@@ -1610,18 +1635,20 @@ function routeFromUrl() {
   return {
     route: params.get("view") || "home",
     id: params.get("id") || undefined,
-    query: params.get("q") || ""
+    query: params.get("q") || "",
+    page: Number(params.get("page")) || 1
   };
 }
 
 function navigate(route, id, query = "", options = {}) {
   const app = document.getElementById("app");
+  const page = route === "library" ? (options.page || 1) : 1;
   document.querySelectorAll(".nav-link").forEach(link => {
     link.classList.toggle("active", link.dataset.route === route || (route === "keyword" && link.dataset.route === "library"));
   });
   document.querySelector(".main-nav").classList.remove("open");
 
-  if (route === "library") app.innerHTML = renderLibrary(query);
+  if (route === "library") app.innerHTML = renderLibrary(query, page);
   else if (route === "keyword") app.innerHTML = renderKeyword(id);
   else if (route === "weekly") app.innerHTML = renderWeekly();
   else if (route === "weekly-detail") app.innerHTML = renderWeeklyDetail(id);
@@ -1631,7 +1658,7 @@ function navigate(route, id, query = "", options = {}) {
 
   if (options.history !== false) {
     const method = options.replace ? "replaceState" : "pushState";
-    window.history[method]({ route, id, query }, "", routeUrl(route, id, query));
+    window.history[method]({ route, id, query, page }, "", routeUrl(route, id, query, page));
   }
   window.scrollTo({ top: 0, behavior: options.instant ? "auto" : "smooth" });
 }
@@ -1663,6 +1690,7 @@ document.addEventListener("click", (event) => {
   const weeklyTarget = event.target.closest("[data-weekly]");
   const searchTarget = event.target.closest("[data-search]");
   const filterTarget = event.target.closest("[data-filter]");
+  const libraryPageTarget = event.target.closest("[data-library-page]");
   const scrollTarget = event.target.closest("[data-scroll]");
   const deleteTarget = event.target.closest("[data-delete]");
   const saveLaterTarget = event.target.closest("[data-save-later]");
@@ -1682,6 +1710,10 @@ document.addEventListener("click", (event) => {
   if (filterTarget) {
     currentFilter = filterTarget.dataset.filter;
     navigate("library");
+  }
+  if (libraryPageTarget && !libraryPageTarget.disabled) {
+    const query = document.getElementById("library-search-input")?.value || "";
+    navigate("library", null, query, { page: Number(libraryPageTarget.dataset.libraryPage) });
   }
   if (scrollTarget) document.getElementById(scrollTarget.dataset.scroll)?.scrollIntoView({ behavior: "smooth" });
   if (deleteTarget) {
@@ -1800,8 +1832,8 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("popstate", () => {
   const state = routeFromUrl();
-  navigate(state.route, state.id, state.query, { history: false, instant: true });
+  navigate(state.route, state.id, state.query, { history: false, instant: true, page: state.page });
 });
 
 const initialRoute = routeFromUrl();
-navigate(initialRoute.route, initialRoute.id, initialRoute.query, { replace: true, instant: true });
+navigate(initialRoute.route, initialRoute.id, initialRoute.query, { replace: true, instant: true, page: initialRoute.page });

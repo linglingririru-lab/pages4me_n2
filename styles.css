@@ -568,6 +568,56 @@ p {
   margin-bottom: 28px;
 }
 
+.library-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -8px 0 16px;
+  color: var(--ink-soft);
+  font: 500 10px "DM Mono", monospace;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.page-number,
+.page-move {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: 500 11px "DM Mono", monospace;
+  cursor: pointer;
+}
+
+.page-number.active {
+  border-color: #82b7b2;
+  background: var(--mint);
+}
+
+.page-move:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.page-gap {
+  color: var(--ink-soft);
+}
+
 .detail-layout {
   position: relative;
   display: grid;
@@ -1569,6 +1619,17 @@ footer p {
   .compact-form {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .pagination {
+    gap: 9px;
+  }
+
+  .page-number,
+  .page-move {
+    min-width: 33px;
+    height: 34px;
+    padding: 0 9px;
   }
 
   .field-note {

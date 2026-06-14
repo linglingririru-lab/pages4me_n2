@@ -1862,9 +1862,52 @@ function routeFromUrl() {
   };
 }
 
+const ADMIN_UNLOCK_KEY = "yorimichi-admin-unlocked";
+const ADMIN_PASSCODE_HASH = "5b7465c902b300d7f5fe84df02fe151d11cb93cbe30d1edf75d5e46731868492";
+let adminAccessPending = false;
+
+function isAdminUnlocked() {
+  return sessionStorage.getItem(ADMIN_UNLOCK_KEY) === "true";
+}
+
+function openAdminLock() {
+  adminAccessPending = true;
+  const dialog = document.getElementById("admin-lock-dialog");
+  const form = document.getElementById("admin-lock-form");
+  form.reset();
+  document.getElementById("admin-lock-error").textContent = "";
+  if (!dialog.open) dialog.showModal();
+  document.getElementById("admin-passcode").focus();
+}
+
+function closeAdminLock() {
+  const dialog = document.getElementById("admin-lock-dialog");
+  if (dialog.open) dialog.close();
+  adminAccessPending = false;
+}
+
+async function hashPasscode(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function navigate(route, id, query = "", options = {}) {
   const app = document.getElementById("app");
   const page = route === "library" ? (options.page || 1) : 1;
+
+  if (route === "admin" && !isAdminUnlocked()) {
+    if (!app.innerHTML.trim()) {
+      app.innerHTML = renderHome();
+      document.querySelectorAll(".nav-link").forEach(link => {
+        link.classList.toggle("active", link.dataset.route === "home");
+      });
+      window.history.replaceState({ route: "home" }, "", routeUrl("home"));
+    }
+    openAdminLock();
+    return;
+  }
+
   document.querySelectorAll(".nav-link").forEach(link => {
     link.classList.toggle("active", link.dataset.route === route || (route === "keyword" && link.dataset.route === "library"));
   });
@@ -1968,6 +2011,10 @@ document.addEventListener("click", (event) => {
   const deleteNoteTarget = event.target.closest("[data-delete-note]");
   const articleBackTarget = event.target.closest("[data-article-back]");
 
+  if (event.target.closest("#cancel-admin-access")) {
+    closeAdminLock();
+    return;
+  }
   if (event.target.closest("#cancel-delete")) {
     closeDeleteDialog();
     return;
@@ -2056,8 +2103,32 @@ document.getElementById("delete-dialog").addEventListener("click", (event) => {
   if (event.target === event.currentTarget) closeDeleteDialog();
 });
 
-document.addEventListener("submit", (event) => {
+document.getElementById("admin-lock-dialog").addEventListener("cancel", (event) => {
   event.preventDefault();
+  closeAdminLock();
+});
+
+document.getElementById("admin-lock-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeAdminLock();
+});
+
+document.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (event.target.id === "admin-lock-form") {
+    const passcode = new FormData(event.target).get("passcode");
+    const hash = await hashPasscode(passcode);
+    if (hash === ADMIN_PASSCODE_HASH) {
+      sessionStorage.setItem(ADMIN_UNLOCK_KEY, "true");
+      closeAdminLock();
+      navigate("admin");
+      showToast("管理メニューのロックを解除しました");
+    } else {
+      const error = document.getElementById("admin-lock-error");
+      error.textContent = "パスコードが違います。大文字・小文字も確認してください。";
+      document.getElementById("admin-passcode").select();
+    }
+    return;
+  }
   if (event.target.id === "hero-search") {
     searchKeyword(document.getElementById("hero-search-input").value);
   }

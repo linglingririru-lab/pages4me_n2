@@ -1677,6 +1677,70 @@ footer p {
   cursor: pointer;
 }
 
+.access-mark {
+  position: relative;
+  width: 35px;
+  height: 30px;
+  margin-bottom: 18px;
+  border: 2px solid #5b929f;
+  border-radius: 8px;
+  background: #e4f2f1;
+}
+
+.access-mark::before {
+  position: absolute;
+  top: -13px;
+  left: 8px;
+  width: 15px;
+  height: 15px;
+  border: 2px solid #5b929f;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  content: "";
+}
+
+.access-mark span {
+  position: absolute;
+  top: 9px;
+  left: 14px;
+  width: 4px;
+  height: 9px;
+  border-radius: 99px;
+  background: #5b929f;
+}
+
+.access-dialog form {
+  margin-top: 21px;
+}
+
+.access-dialog label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.access-dialog input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #b7cdd5;
+  border-radius: 10px;
+  outline: none;
+  background: var(--white);
+}
+
+.access-dialog input:focus {
+  border-color: #5d9caf;
+  box-shadow: 0 0 0 3px rgba(115, 174, 190, 0.14);
+}
+
+.access-error {
+  min-height: 20px;
+  margin: 7px 0 0;
+  color: var(--orange-dark);
+  font-size: 11px;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Kiwi+Maru:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260614-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260614-4" />
   </head>
   <body>
     <div class="page-shell">
@@ -63,6 +63,31 @@
         <button id="confirm-delete" class="danger-btn" type="button">削除する</button>
       </div>
     </dialog>
-    <script src="./app.js?v=20260614-3"></script>
+    <dialog id="admin-lock-dialog" class="confirm-dialog access-dialog" aria-labelledby="admin-lock-title">
+      <div class="access-mark" aria-hidden="true">
+        <span></span>
+      </div>
+      <p class="category-label">ADMIN ACCESS</p>
+      <h2 id="admin-lock-title">管理メニューを開く</h2>
+      <p>誤操作を防ぐため、管理用パスコードを入力してください。タブを閉じると再びロックされます。</p>
+      <form id="admin-lock-form">
+        <label for="admin-passcode">パスコード</label>
+        <input
+          id="admin-passcode"
+          name="passcode"
+          type="password"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          required
+        />
+        <p id="admin-lock-error" class="access-error" role="alert" aria-live="polite"></p>
+        <div class="confirm-actions">
+          <button id="cancel-admin-access" class="secondary-btn" type="button">キャンセル</button>
+          <button class="primary-btn" type="submit">管理画面へ</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="./app.js?v=20260614-4"></script>
   </body>
 </html>

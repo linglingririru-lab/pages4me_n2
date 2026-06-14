@@ -350,6 +350,10 @@ p {
   margin-top: 19px;
 }
 
+.hero-mini-mark {
+  display: none;
+}
+
 .quick-tags button,
 .chip {
   padding: 7px 11px;
@@ -1824,19 +1828,52 @@ footer p {
   }
 
   .hero-art {
-    min-height: 96px;
-    max-height: 110px;
-    margin-top: 2px;
+    display: none;
   }
 
-  .hero-art img {
-    object-position: center 47%;
+  .hero-copy {
+    padding-bottom: 38px;
   }
 
-  .hero-art::after {
-    background:
-      linear-gradient(180deg, var(--paper), transparent 30%, transparent 72%, var(--paper)),
-      linear-gradient(90deg, var(--paper), transparent 18%, transparent 82%, var(--paper));
+  .quick-row {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+  }
+
+  .quick-tags {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .hero-mini-mark {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: none;
+    padding: 8px;
+    border: 1px solid #b8d3d7;
+    border-radius: 11px 11px 11px 4px;
+    background: linear-gradient(145deg, #f8fcfb, #dceff0);
+  }
+
+  .hero-mini-mark i {
+    color: #538fa0;
+    font: 500 10px "JetBrains Mono", monospace;
+    text-align: center;
+  }
+
+  .hero-mini-mark b {
+    width: 22px;
+    height: 2px;
+    margin-left: 4px;
+    border-radius: 99px;
+    background: #8ebbb6;
+  }
+
+  .hero-mini-mark b:last-child {
+    width: 15px;
+    background: #9ebdcc;
   }
 
   .section {

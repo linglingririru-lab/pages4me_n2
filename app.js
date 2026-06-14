@@ -1324,11 +1324,18 @@ function renderHome() {
             <input id="hero-search-input" aria-label="キーワードを検索" placeholder="例：コマンドライン引数、クラスパス、chmod..." />
             <button class="primary-btn" type="submit">調べる</button>
           </form>
-          <div class="quick-tags">
-            <button data-search="コマンドライン引数"># コマンドライン引数</button>
-            <button data-search="クラスパス"># クラスパス</button>
-            <button data-search="FizzBuzz"># FizzBuzz</button>
-            <button data-search="シーケンス図"># シーケンス図</button>
+          <div class="quick-row">
+            <div class="quick-tags">
+              <button data-search="コマンドライン引数"># コマンドライン引数</button>
+              <button data-search="クラスパス"># クラスパス</button>
+              <button data-search="FizzBuzz"># FizzBuzz</button>
+              <button data-search="シーケンス図"># シーケンス図</button>
+            </div>
+            <span class="hero-mini-mark" aria-hidden="true">
+              <i>&lt;/&gt;</i>
+              <b></b>
+              <b></b>
+            </span>
           </div>
         </div>
         <div class="hero-art">

@@ -410,6 +410,10 @@ p {
   gap: 18px;
 }
 
+.swipe-hint {
+  display: none;
+}
+
 .keyword-card {
   position: relative;
   min-height: 250px;
@@ -1814,6 +1818,46 @@ footer p {
   .card-grid,
   .side-note-grid {
     grid-template-columns: 1fr;
+  }
+
+  .home-keyword-section {
+    padding-right: 0;
+  }
+
+  .home-keyword-section .section-heading,
+  .home-keyword-section .swipe-hint {
+    padding-right: 7vw;
+  }
+
+  .swipe-hint {
+    display: block;
+    margin: -10px 0 15px;
+    color: #64808b;
+    font: 500 10px "DM Mono", monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .home-keyword-scroll {
+    display: flex;
+    gap: 13px;
+    padding: 2px 7vw 17px 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-left: 0;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-keyword-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-keyword-scroll .keyword-card {
+    width: 78vw;
+    min-width: 78vw;
+    min-height: 230px;
+    scroll-snap-align: start;
   }
 
   .weekly-copy {

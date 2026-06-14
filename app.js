@@ -1336,7 +1336,7 @@ function renderHome() {
         </div>
       </section>
 
-      <section class="section alt">
+      <section class="section alt home-keyword-section">
         <div class="section-heading">
           <div>
             <p class="eyebrow">START HERE</p>
@@ -1345,7 +1345,8 @@ function renderHome() {
           </div>
           <button class="text-btn" data-route="library">図鑑を全部見る →</button>
         </div>
-        <div class="card-grid">${keywordCards(keywords.slice(0, 6))}</div>
+        <p class="swipe-hint" aria-hidden="true">横にスワイプして、ほかのカテゴリを見る →</p>
+        <div class="card-grid home-keyword-scroll">${keywordCards(keywords.slice(0, 6))}</div>
       </section>
 
       <section class="section">

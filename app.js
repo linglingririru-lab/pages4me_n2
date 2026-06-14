@@ -1711,6 +1711,15 @@ function renderDesk() {
             </div>
             <button class="primary-btn" type="submit">記事化待ちに追加</button>
           </form>
+          <div class="backlog-share">
+            <div>
+              <strong>まとめて管理者へ送る</strong>
+              <p>箱の内容を文章にまとめ、スマホの共有メニューまたはメールで送れます。</p>
+            </div>
+            <button class="secondary-btn" id="open-backlog-share" type="button" ${readingList.length ? "" : "disabled"}>
+              ${readingList.length ? `${readingList.length}件を共有` : "共有する内容がありません"}
+            </button>
+          </div>
           <div class="desk-list">
             ${readingList.length ? readingList.map(entry => `
               <div class="desk-item">
@@ -1949,6 +1958,66 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
+const ADMIN_CONTACT_EMAIL = "ryougayamamura@gmail.com";
+let backlogShareText = "";
+
+function buildBacklogShareText() {
+  const lines = readingList.map((entry, index) => {
+    const details = [
+      `${index + 1}. ${entry.title}`,
+      `カテゴリ: ${entry.category}`,
+      `登録日: ${formatSavedDate(entry.createdAt)}`,
+      entry.request ? `希望・疑問: ${entry.request}` : "希望・疑問: 記載なし"
+    ];
+    return details.join("\n");
+  });
+
+  return [
+    "YORIMICHI.dev「あとでまとめる箱」の記事化リクエスト",
+    "",
+    ...lines.flatMap((line, index) => index === lines.length - 1 ? [line] : [line, ""]),
+    "",
+    `管理者連絡先: ${ADMIN_CONTACT_EMAIL}`
+  ].join("\n");
+}
+
+function openBacklogShareDialog() {
+  if (!readingList.length) return;
+  backlogShareText = buildBacklogShareText();
+  document.getElementById("backlog-share-preview").value = backlogShareText;
+  const dialog = document.getElementById("backlog-share-dialog");
+  dialog.showModal();
+  document.getElementById("cancel-backlog-share").focus();
+}
+
+function closeBacklogShareDialog() {
+  const dialog = document.getElementById("backlog-share-dialog");
+  if (dialog.open) dialog.close();
+}
+
+async function shareBacklog() {
+  if (!backlogShareText) return;
+  const shareData = {
+    title: "YORIMICHI.dev 記事化リクエスト",
+    text: backlogShareText
+  };
+
+  closeBacklogShareDialog();
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      showToast("共有メニューへ渡しました");
+    } catch (error) {
+      if (error.name !== "AbortError") showToast("共有を開けませんでした");
+    }
+    return;
+  }
+
+  const subject = encodeURIComponent(shareData.title);
+  const body = encodeURIComponent(shareData.text);
+  window.location.href = `mailto:${ADMIN_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+}
+
 let pendingDeleteAction = null;
 
 function openDeleteDialog(action, label, message = "この操作は元に戻せません。") {
@@ -2011,6 +2080,18 @@ document.addEventListener("click", (event) => {
   const deleteNoteTarget = event.target.closest("[data-delete-note]");
   const articleBackTarget = event.target.closest("[data-article-back]");
 
+  if (event.target.closest("#open-backlog-share")) {
+    openBacklogShareDialog();
+    return;
+  }
+  if (event.target.closest("#cancel-backlog-share")) {
+    closeBacklogShareDialog();
+    return;
+  }
+  if (event.target.closest("#confirm-backlog-share")) {
+    shareBacklog();
+    return;
+  }
   if (event.target.closest("#cancel-admin-access")) {
     closeAdminLock();
     return;
@@ -2110,6 +2191,15 @@ document.getElementById("admin-lock-dialog").addEventListener("cancel", (event) 
 
 document.getElementById("admin-lock-dialog").addEventListener("click", (event) => {
   if (event.target === event.currentTarget) closeAdminLock();
+});
+
+document.getElementById("backlog-share-dialog").addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeBacklogShareDialog();
+});
+
+document.getElementById("backlog-share-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeBacklogShareDialog();
 });
 
 document.addEventListener("submit", async (event) => {

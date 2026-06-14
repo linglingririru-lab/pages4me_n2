@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Kiwi+Maru:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260614-4" />
+    <link rel="stylesheet" href="./styles.css?v=20260614-5" />
   </head>
   <body>
     <div class="page-shell">
@@ -88,6 +88,20 @@
         </div>
       </form>
     </dialog>
-    <script src="./app.js?v=20260614-4"></script>
+    <dialog id="backlog-share-dialog" class="confirm-dialog share-dialog" aria-labelledby="backlog-share-title">
+      <div class="share-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="category-label">SHARE REQUESTS</p>
+      <h2 id="backlog-share-title">この内容を管理者へ共有しますか？</h2>
+      <p>スマホでは送信先を選ぶ共有メニューが開きます。内容を確認してから送信してください。</p>
+      <label for="backlog-share-preview">共有する内容</label>
+      <textarea id="backlog-share-preview" readonly></textarea>
+      <div class="confirm-actions">
+        <button id="cancel-backlog-share" class="secondary-btn" type="button">キャンセル</button>
+        <button id="confirm-backlog-share" class="primary-btn" type="button">共有メニューを開く</button>
+      </div>
+    </dialog>
+    <script src="./app.js?v=20260614-5"></script>
   </body>
 </html>

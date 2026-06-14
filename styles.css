@@ -1470,6 +1470,70 @@ footer p {
   transform: translateY(0);
 }
 
+.confirm-dialog {
+  width: min(430px, calc(100vw - 32px));
+  padding: 30px;
+  border: 1px solid #a9cbc8;
+  border-radius: 18px;
+  color: var(--ink);
+  background: #f8fcfb;
+  box-shadow: 0 22px 70px rgba(23, 48, 66, 0.2);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(23, 48, 66, 0.34);
+  backdrop-filter: blur(3px);
+}
+
+.confirm-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--orange-dark);
+  background: #fbe8e2;
+  font: 600 18px "DM Mono", monospace;
+}
+
+.confirm-dialog .category-label {
+  margin: 0 0 10px;
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 12px;
+  font-family: "Kiwi Maru", serif;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.confirm-dialog > p:not(.category-label) {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.danger-btn {
+  padding: 11px 17px;
+  border: 1px solid var(--orange-dark);
+  border-radius: 10px;
+  color: var(--white);
+  background: var(--orange-dark);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

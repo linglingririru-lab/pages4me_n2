@@ -1684,6 +1684,54 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
+let pendingDeleteAction = null;
+
+function openDeleteDialog(action, label, message = "この操作は元に戻せません。") {
+  pendingDeleteAction = action;
+  const dialog = document.getElementById("delete-dialog");
+  document.getElementById("delete-dialog-title").textContent = `「${label}」を削除しますか？`;
+  document.getElementById("delete-dialog-message").textContent = message;
+  dialog.showModal();
+  document.getElementById("cancel-delete").focus();
+}
+
+function closeDeleteDialog() {
+  const dialog = document.getElementById("delete-dialog");
+  if (dialog.open) dialog.close();
+  pendingDeleteAction = null;
+}
+
+function confirmPendingDeletion() {
+  if (!pendingDeleteAction) return;
+  const { type, id } = pendingDeleteAction;
+  closeDeleteDialog();
+
+  if (type === "keyword") {
+    keywords = keywords.filter(item => item.id !== id);
+    saveKeywords();
+    navigate("admin");
+    showToast("キーワードを削除しました");
+  }
+  if (type === "backlog") {
+    readingList = readingList.filter(entry => entry.id !== id);
+    saveReadingList();
+    navigate("desk");
+    showToast("記事化待ちから削除しました");
+  }
+  if (type === "note") {
+    trainingNotes = trainingNotes.filter(note => note.id !== id);
+    localStorage.setItem("yorimichi-training-notes", JSON.stringify(trainingNotes));
+    navigate("desk");
+    showToast("研修メモを削除しました");
+  }
+  if (type === "reset") {
+    keywords = [...seedKeywords];
+    saveKeywords();
+    navigate("admin");
+    showToast("初期データに戻しました");
+  }
+}
+
 document.addEventListener("click", (event) => {
   const routeTarget = event.target.closest("[data-route]");
   const keywordTarget = event.target.closest("[data-keyword]");
@@ -1698,6 +1746,14 @@ document.addEventListener("click", (event) => {
   const deleteNoteTarget = event.target.closest("[data-delete-note]");
   const articleBackTarget = event.target.closest("[data-article-back]");
 
+  if (event.target.closest("#cancel-delete")) {
+    closeDeleteDialog();
+    return;
+  }
+  if (event.target.closest("#confirm-delete")) {
+    confirmPendingDeletion();
+    return;
+  }
   if (articleBackTarget) {
     if (window.history.length > 1) window.history.back();
     else navigate("library");
@@ -1717,10 +1773,12 @@ document.addEventListener("click", (event) => {
   }
   if (scrollTarget) document.getElementById(scrollTarget.dataset.scroll)?.scrollIntoView({ behavior: "smooth" });
   if (deleteTarget) {
-    keywords = keywords.filter(item => item.id !== deleteTarget.dataset.delete);
-    saveKeywords();
-    navigate("admin");
-    showToast("キーワードを削除しました");
+    const item = keywords.find(keyword => keyword.id === deleteTarget.dataset.delete);
+    openDeleteDialog(
+      { type: "keyword", id: deleteTarget.dataset.delete },
+      item?.title || "このキーワード"
+    );
+    return;
   }
   if (saveLaterTarget) {
     const item = keywords.find(keyword => keyword.id === saveLaterTarget.dataset.saveLater);
@@ -1741,24 +1799,39 @@ document.addEventListener("click", (event) => {
     showToast("あとでまとめる箱へ追加しました");
   }
   if (removeLaterTarget) {
-    readingList = readingList.filter(entry => entry.id !== removeLaterTarget.dataset.removeLater);
-    saveReadingList();
-    navigate("desk");
+    const entry = readingList.find(item => item.id === removeLaterTarget.dataset.removeLater);
+    openDeleteDialog(
+      { type: "backlog", id: removeLaterTarget.dataset.removeLater },
+      entry?.title || "この記事化待ち"
+    );
+    return;
   }
   if (deleteNoteTarget) {
-    trainingNotes = trainingNotes.filter(note => note.id !== deleteNoteTarget.dataset.deleteNote);
-    localStorage.setItem("yorimichi-training-notes", JSON.stringify(trainingNotes));
-    navigate("desk");
+    const note = trainingNotes.find(item => item.id === deleteNoteTarget.dataset.deleteNote);
+    const label = note?.title || note?.text.slice(0, 18) || "この研修メモ";
+    openDeleteDialog({ type: "note", id: deleteNoteTarget.dataset.deleteNote }, label);
+    return;
   }
   if (event.target.closest("#reset-data")) {
-    keywords = [...seedKeywords];
-    saveKeywords();
-    navigate("admin");
-    showToast("初期データに戻しました");
+    openDeleteDialog(
+      { type: "reset" },
+      "追加したキーワード",
+      "自分で追加したキーワードが削除され、初期状態へ戻ります。この操作は元に戻せません。"
+    );
+    return;
   }
   if (event.target.closest(".mobile-menu")) {
     document.querySelector(".main-nav").classList.toggle("open");
   }
+});
+
+document.getElementById("delete-dialog").addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeDeleteDialog();
+});
+
+document.getElementById("delete-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeDeleteDialog();
 });
 
 document.addEventListener("submit", (event) => {

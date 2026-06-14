@@ -48,6 +48,16 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="delete-dialog" class="confirm-dialog" aria-labelledby="delete-dialog-title">
+      <div class="confirm-mark" aria-hidden="true">!</div>
+      <p class="category-label">CONFIRM DELETE</p>
+      <h2 id="delete-dialog-title">削除してもよいですか？</h2>
+      <p id="delete-dialog-message">この操作は元に戻せません。</p>
+      <div class="confirm-actions">
+        <button id="cancel-delete" class="secondary-btn" type="button">キャンセル</button>
+        <button id="confirm-delete" class="danger-btn" type="button">削除する</button>
+      </div>
+    </dialog>
     <script src="./app.js"></script>
   </body>
 </html>

@@ -985,24 +985,44 @@ function reproductionGuideFor(item) {
   const explicit = {
     "command-line-args": {
       label: "ECLIPSE または TERMINAL",
+      title: "引数を渡して、結果を確かめる",
+      intro: "コードだけ眺めるより、起動時に値を渡してargsの中身が変わるところを見る方が早く理解できます。",
+      stepLabel: "実行まで",
+      resultLabel: "表示されるもの",
+      changeLabel: "次に試すこと",
       steps: ["Hello.javaとして保存する", "ターミナルなら `javac Hello.java` でコンパイルする", "`java Hello Tanaka` を実行する"],
       expected: "こんにちは、Tanakaさん",
       change: "`Tanaka`を自分の名前へ変える。次に引数なしで実行し、なぜ例外になるかをargs.lengthから説明する。"
     },
     "java-method": {
       label: "ECLIPSE または TERMINAL",
+      title: "呼び出して、戻り値を受け取る",
+      intro: "メソッドへ値が入り、計算結果が呼び出し元へ戻る往復を、小さなプログラムで追います。",
+      stepLabel: "実行まで",
+      resultLabel: "表示されるもの",
+      changeLabel: "次に試すこと",
       steps: ["PriceCalculator.javaとして保存する", "EclipseならRun As → Java Application、ターミナルなら `javac PriceCalculator.java`", "`java PriceCalculator` を実行する"],
       expected: "1100",
       change: "1000を1999へ変更し、小数部分が四捨五入ではなく切り捨てになることを確認する。"
     },
     "java-for-loop": {
       label: "ECLIPSE または TERMINAL",
+      title: "繰り返しの順番を観察する",
+      intro: "iの値と配列の添字を一周ずつ対応させると、for文の3つの式が何を担当しているか見えてきます。",
+      stepLabel: "実行まで",
+      resultLabel: "観察する結果",
+      changeLabel: "境界を変える",
       steps: ["配列とfor文をmainメソッド内へ置く", "実行前に3行の出力順を紙へ書く", "実行後、予想とConsoleを比較する"],
       expected: "Java、Linux、Gitが配列の順番で1行ずつ表示される",
       change: "条件を `i <= tools.length` に変えて一度失敗し、存在しない添字へ進む瞬間を確認する。"
     },
     "java-fizzbuzz": {
       label: "ECLIPSE または TERMINAL",
+      title: "条件の順番を出力で確かめる",
+      intro: "正解コードを暗記せず、3・5・15のときにどの条件へ入るかを出力と照らして読みます。",
+      stepLabel: "実行まで",
+      resultLabel: "観察する結果",
+      changeLabel: "順番を変える",
       steps: ["クラスのmainメソッド内へコードを置く", "まず1〜20へ上限を縮めて実行する", "3・5・15・16の出力を条件式と照合する"],
       expected: "3はFizz、5はBuzz、15はFizzBuzz、16は16",
       change: "15の条件を最後へ移し、15がFizzだけになる理由を確認する。"
@@ -1013,6 +1033,11 @@ function reproductionGuideFor(item) {
   if (item.category === "Java" || item.category === "Java演習") {
     return {
       label: "ECLIPSE / JAVA",
+      title: "コードを動かして確かめる",
+      intro: "実行前に結果を一度予想し、EclipseのConsoleと比較します。予想と最初にずれた場所が、今読むべきポイントです。",
+      stepLabel: "実行まで",
+      resultLabel: "確認する結果",
+      changeLabel: "一か所変える",
       steps: ["コードをmainメソッドを持つクラスへ置く", "実行前にConsoleへ出る値かエラーを予想する", "Run As → Java Applicationで実行し、最初に予想と違った行を探す"],
       expected: "記事のコードに対応する値、または理解に必要なコンパイルエラー・例外",
       change: "値・条件・引数のどれか一つだけを変え、結果が変わった理由を一文で残す。"
@@ -1021,6 +1046,11 @@ function reproductionGuideFor(item) {
   if (item.category === "Linux") {
     return {
       label: "TERMINAL",
+      title: "コマンドの前後を比べる",
+      intro: "コマンド名だけを覚えず、実行前の状態・表示された内容・実行後の状態をセットで観察します。",
+      stepLabel: "試す手順",
+      resultLabel: "観察するもの",
+      changeLabel: "比較してみる",
       steps: ["`pwd`で現在地を確認する", "練習用ディレクトリで記事のコマンドを一つずつ実行する", "標準出力に加えて `echo $?` で終了ステータスを確認する"],
       expected: "コマンドによる表示、ファイル状態の変化、終了ステータス",
       change: "存在する対象と存在しない対象の両方で実行し、表示と終了ステータスの違いを見る。"
@@ -1029,6 +1059,11 @@ function reproductionGuideFor(item) {
   if (item.category === "CSS" || item.category === "Web・CSS") {
     return {
       label: "BROWSER DEVTOOLS",
+      title: "ブラウザで変化を観察する",
+      intro: "CSSはコードと画面を往復して理解します。DevToolsで宣言を一つずつ切り替え、どの領域や配置が変わるかを見ます。",
+      stepLabel: "観察の手順",
+      resultLabel: "画面で見る場所",
+      changeLabel: "条件を変える",
       steps: ["小さなHTMLとCSSへ例を貼る", "ブラウザで開き、DevToolsで対象要素を選ぶ", "CSS宣言を一つ無効化して、箱と配置の変化を見る"],
       expected: "指定したスタイルが画面とComputed Styleへ反映される",
       change: "画面幅を狭め、どの幅で読みづらくなるかを確認してからmedia queryを調整する。"
@@ -1037,6 +1072,11 @@ function reproductionGuideFor(item) {
   if (item.category === "設計・DB") {
     return {
       label: "PAPER / SQL CONSOLE",
+      title: "記号を業務の言葉へ戻す",
+      intro: "図やSQLは実行結果だけでなく、誰・何・どの関係を表しているかを日本語で説明できることが大切です。",
+      stepLabel: "読み解く手順",
+      resultLabel: "説明できる状態",
+      changeLabel: "条件を変える",
       steps: ["例に登場する名詞・関係・処理を日本語で書き出す", "図やSQLの各行がどの日本語に対応するか線で結ぶ", "SQLならSELECTで対象行を確認してから変更文を考える"],
       expected: "記号やSQLを、日本語の業務ルールとして説明できる",
       change: "1対多を多対多へ変えた場合、どの表や関係が必要になるか考える。"
@@ -1044,6 +1084,11 @@ function reproductionGuideFor(item) {
   }
   return {
     label: "DESK CHECK",
+    title: "具体例に置き換えて考える",
+    intro: "身近な例と比較対象を置き、用語がどんな役割を担当するのかを自分の言葉で確かめます。",
+    stepLabel: "考える手順",
+    resultLabel: "説明できる状態",
+    changeLabel: "自分の例へ",
     steps: ["例を読む前に結果や関係を予想する", "入力・処理・結果、または目的・手段・制約へ分ける", "似た用語との違いを一つ書く"],
     expected: "用語を暗記文ではなく、具体例と比較対象を使って説明できる",
     change: "自分の研修や身近なシステムへ置き換え、同じ考え方がどこに現れるか探す。"
@@ -1467,24 +1512,24 @@ function renderKeyword(id) {
             <span>この記事を終えたら</span>
             <ul>${lesson.goals.map(goal => `<li>${escapeHtml(goal)}</li>`).join("")}</ul>
           </section>
-          <h2 id="overview">手元で再現する最小例</h2>
+          <h2 id="overview">${escapeHtml(reproduction.title)}</h2>
           <p>${formatInline(item.body)}</p>
           <aside class="example-notice">
-            <strong>このページ上で自動実行する例ではありません</strong>
-            <p>${escapeHtml(reproduction.label)}で、自分の手を動かして結果を確認するための例です。実行場所と結果の見方を下にまとめています。</p>
+            <strong>${escapeHtml(reproduction.label)}</strong>
+            <p>${escapeHtml(reproduction.intro)}</p>
           </aside>
           <pre class="code-block" data-label="${escapeHtml(codeLabelFor(item.category))}"><code>${escapeHtml(item.code)}</code></pre>
           <div class="reproduction-grid">
             <section>
-              <span>01 / 実行まで</span>
+              <span>01 / ${escapeHtml(reproduction.stepLabel)}</span>
               <ol>${reproduction.steps.map(step => `<li>${formatInline(step)}</li>`).join("")}</ol>
             </section>
             <section>
-              <span>02 / 確認する結果</span>
+              <span>02 / ${escapeHtml(reproduction.resultLabel)}</span>
               <p>${formatInline(reproduction.expected)}</p>
             </section>
             <section>
-              <span>03 / 一か所変える</span>
+              <span>03 / ${escapeHtml(reproduction.changeLabel)}</span>
               <p>${formatInline(reproduction.change)}</p>
             </section>
           </div>
@@ -1589,7 +1634,7 @@ function renderKeyword(id) {
         <aside class="article-aside">
           <div class="toc">
             <strong>この記事の道順</strong>
-            <button data-scroll="overview">00 再現する例</button>
+            <button data-scroll="overview">00 最初の具体例</button>
             <button data-scroll="code-study">01 コードを追う</button>
             <button data-scroll="trace">02 実行トレース</button>
             ${lesson.sections.map((section, index) => `<button data-scroll="section-${index + 1}">0${index + 1} ${escapeHtml(section.title)}</button>`).join("")}

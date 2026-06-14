@@ -956,7 +956,7 @@ const sideNotes = [
 
 let keywords = loadKeywords();
 let currentFilter = "すべて";
-let readingList = loadJson("yorimichi-reading-list", []);
+let readingList = loadBacklog();
 let trainingNotes = loadJson("yorimichi-training-notes", []);
 
 function loadJson(key, fallback) {
@@ -966,6 +966,50 @@ function loadJson(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function loadBacklog() {
+  const saved = loadJson("yorimichi-reading-list", []);
+  return saved.map((entry, index) => {
+    if (typeof entry === "string") {
+      const item = keywords.find(keyword => keyword.id === entry);
+      return {
+        id: `backlog-legacy-${index}-${entry}`,
+        keywordId: entry,
+        title: item?.title || entry,
+        request: "",
+        category: item?.category || "未分類",
+        source: "article",
+        status: "waiting",
+        createdAt: ""
+      };
+    }
+    return {
+      id: entry.id || `backlog-${Date.now()}-${index}`,
+      keywordId: entry.keywordId || "",
+      title: entry.title || "名称未設定",
+      request: entry.request || "",
+      category: entry.category || "あとでまとめる",
+      source: entry.source || "desk",
+      status: entry.status || "waiting",
+      createdAt: entry.createdAt || ""
+    };
+  });
+}
+
+function saveReadingList() {
+  localStorage.setItem("yorimichi-reading-list", JSON.stringify(readingList));
+}
+
+function isSavedForLater(keywordId) {
+  return readingList.some(entry => entry.keywordId === keywordId);
+}
+
+function formatSavedDate(value) {
+  if (!value) return "登録日なし";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "登録日なし";
+  return new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
 }
 
 function loadKeywords() {
@@ -1365,8 +1409,8 @@ function renderKeyword(id) {
             <strong>RELATED WORDS</strong>
             ${item.related.map(word => `<button class="chip" data-search="${escapeHtml(word)}">${escapeHtml(word)}</button>`).join("")}
           </div>
-          <button class="secondary-btn save-later ${readingList.includes(item.id) ? "saved" : ""}" data-save-later="${item.id}">
-            ${readingList.includes(item.id) ? "あとでまとめる箱に追加済み" : "あとでまとめる箱へ"}
+          <button class="secondary-btn save-later ${isSavedForLater(item.id) ? "saved" : ""}" data-save-later="${item.id}">
+            ${isSavedForLater(item.id) ? "あとでまとめる箱に追加済み" : "あとでまとめる箱へ"}
           </button>
           <button class="secondary-btn" data-route="library" style="width:100%; margin-top: 20px">← 図鑑へ戻る</button>
         </aside>
@@ -1376,7 +1420,6 @@ function renderKeyword(id) {
 }
 
 function renderDesk() {
-  const savedItems = readingList.map(id => keywords.find(item => item.id === id)).filter(Boolean);
   return `
     <div class="view">
       <header class="page-heading">
@@ -1385,30 +1428,16 @@ function renderDesk() {
         <p>今は理解しきれない言葉と、研修中の雑なメモをいったん置く場所。きれいに整理するのは後で大丈夫です。</p>
       </header>
       <div class="desk-layout">
-        <section class="panel backlog-panel">
-          <div class="panel-heading">
-            <div><span class="category-label">READ LATER</span><h2>あとでまとめる箱</h2></div>
-            <strong>${savedItems.length}件</strong>
-          </div>
-          <form id="backlog-form" class="compact-form">
-            <input name="query" required placeholder="例：DI、排他制御、よく分からなかった言葉" />
-            <button class="primary-btn" type="submit">追加</button>
-          </form>
-          <div class="desk-list">
-            ${savedItems.length ? savedItems.map(item => `
-              <div class="desk-item">
-                <button class="desk-link" data-keyword="${item.id}"><small>${escapeHtml(item.category)}</small><strong>${escapeHtml(item.title)}</strong></button>
-                <button class="icon-btn" data-remove-later="${item.id}">外す</button>
-              </div>`).join("") : `<div class="empty-state small"><p>記事の「あとでまとめる箱へ」か、上の入力欄から追加できます。</p></div>`}
-          </div>
-        </section>
         <section class="panel notes-panel">
           <div class="panel-heading">
             <div><span class="category-label">ROUGH NOTES</span><h2>研修メモ置き場</h2></div>
             <strong>${trainingNotes.length}枚</strong>
           </div>
           <form id="note-form">
-            <div class="field"><input name="title" required placeholder="見出し：今日のJava研修" /></div>
+            <div class="field">
+              <input name="title" placeholder="タイトル（空欄でも保存できます）" />
+              <small>見出しがいらないメモは、そのまま本文だけ残せます。</small>
+            </div>
             <div class="field"><textarea name="text" required placeholder="箇条書き、疑問、あとで試したいコードなどを雑に置いておく"></textarea></div>
             <button class="primary-btn" type="submit">メモを置く</button>
           </form>
@@ -1416,9 +1445,44 @@ function renderDesk() {
             ${trainingNotes.map(note => `
               <article class="training-note">
                 <div><time>${escapeHtml(note.date)}</time><button class="icon-btn" data-delete-note="${note.id}">削除</button></div>
-                <h3>${escapeHtml(note.title)}</h3>
-                <p>${escapeHtml(note.text).replace(/\n/g, "<br>")}</p>
+                ${note.title ? `<h3>${escapeHtml(note.title)}</h3>` : ""}
+                <p class="${note.title ? "" : "titleless"}">${escapeHtml(note.text).replace(/\n/g, "<br>")}</p>
               </article>`).join("")}
+          </div>
+        </section>
+        <section class="panel backlog-panel">
+          <div class="panel-heading">
+            <div><span class="category-label">READ LATER</span><h2>あとでまとめる箱</h2></div>
+            <strong>${readingList.length}件</strong>
+          </div>
+          <p class="panel-description">ここへ置いた内容は、後で教材記事に追加するための原稿依頼として保存されます。単語だけでも、欲しいコード例や疑問まで書いても大丈夫です。</p>
+          <form id="backlog-form" class="backlog-form">
+            <div class="field">
+              <input name="title" required placeholder="まとめてほしいテーマ：DI、排他制御、配列など" />
+            </div>
+            <div class="field">
+              <textarea name="request" placeholder="任意：Javaのコード例が欲しい、研修でここが分からなかった、周辺知識も知りたい等"></textarea>
+            </div>
+            <button class="primary-btn" type="submit">記事化待ちに追加</button>
+          </form>
+          <div class="desk-list">
+            ${readingList.length ? readingList.map(entry => `
+              <div class="desk-item">
+                ${entry.keywordId ? `
+                  <button class="desk-link" data-keyword="${entry.keywordId}">
+                    <small>${escapeHtml(entry.category)} · ${formatSavedDate(entry.createdAt)}</small>
+                    <strong>${escapeHtml(entry.title)}</strong>
+                    ${entry.request ? `<span>${escapeHtml(entry.request)}</span>` : ""}
+                  </button>
+                ` : `
+                  <div class="desk-link">
+                    <small>記事化待ち · ${formatSavedDate(entry.createdAt)}</small>
+                    <strong>${escapeHtml(entry.title)}</strong>
+                    ${entry.request ? `<span>${escapeHtml(entry.request)}</span>` : ""}
+                  </div>
+                `}
+                <button class="icon-btn" data-remove-later="${entry.id}">外す</button>
+              </div>`).join("") : `<div class="empty-state small"><p>記事の「あとでまとめる箱へ」か、上の入力欄から追加できます。</p></div>`}
           </div>
         </section>
       </div>
@@ -1627,14 +1691,26 @@ document.addEventListener("click", (event) => {
     showToast("キーワードを削除しました");
   }
   if (saveLaterTarget) {
-    if (!readingList.includes(saveLaterTarget.dataset.saveLater)) readingList.unshift(saveLaterTarget.dataset.saveLater);
-    localStorage.setItem("yorimichi-reading-list", JSON.stringify(readingList));
+    const item = keywords.find(keyword => keyword.id === saveLaterTarget.dataset.saveLater);
+    if (item && !isSavedForLater(item.id)) {
+      readingList.unshift({
+        id: `backlog-${Date.now()}`,
+        keywordId: item.id,
+        title: item.title,
+        request: "この記事を、コード例や周辺知識を含めてあとで読み直す。",
+        category: item.category,
+        source: "article",
+        status: "waiting",
+        createdAt: new Date().toISOString()
+      });
+    }
+    saveReadingList();
     navigate("desk");
     showToast("あとでまとめる箱へ追加しました");
   }
   if (removeLaterTarget) {
-    readingList = readingList.filter(id => id !== removeLaterTarget.dataset.removeLater);
-    localStorage.setItem("yorimichi-reading-list", JSON.stringify(readingList));
+    readingList = readingList.filter(entry => entry.id !== removeLaterTarget.dataset.removeLater);
+    saveReadingList();
     navigate("desk");
   }
   if (deleteNoteTarget) {
@@ -1682,28 +1758,23 @@ document.addEventListener("submit", (event) => {
     showToast(`「${title}」を追加しました`);
   }
   if (event.target.id === "backlog-form") {
-    const query = new FormData(event.target).get("query").trim();
-    const match = keywords.find(item => item.title.toLowerCase().includes(query.toLowerCase()));
-    if (match) {
-      if (!readingList.includes(match.id)) readingList.unshift(match.id);
-    } else {
-      const id = `inbox-${Date.now()}`;
-      keywords.unshift({
-        id, title: query, category: "あとで調べる", level: "INBOX",
-        summary: "研修中に拾った、あとで整理するためのキーワード。",
-        lead: `${query}について、研修資料や実例と結びつけて整理しましょう。`,
-        body: "まだ本文はありません。管理画面から詳しい内容を追加するか、研修メモに分かったことを書いてください。",
-        code: "// TODO: 具体例を一つ探す",
-        detourTitle: "まず残せば十分",
-        detour: "分からない言葉をその場ですべて解決しようとすると、本筋を見失うことがあります。いったん置いて、区切りのよい時間に戻りましょう。",
-        related: ["研修メモ", "質問する", "具体例"]
-      });
-      saveKeywords();
-      readingList.unshift(id);
-    }
-    localStorage.setItem("yorimichi-reading-list", JSON.stringify(readingList));
+    const data = new FormData(event.target);
+    const title = data.get("title").trim();
+    const request = data.get("request").trim();
+    const match = keywords.find(item => item.title.toLowerCase() === title.toLowerCase());
+    readingList.unshift({
+      id: `backlog-${Date.now()}`,
+      keywordId: match?.id || "",
+      title,
+      request,
+      category: match?.category || "あとでまとめる",
+      source: "desk",
+      status: "waiting",
+      createdAt: new Date().toISOString()
+    });
+    saveReadingList();
     navigate("desk");
-    showToast("あとでまとめる箱へ追加しました");
+    showToast("記事化待ちに追加しました");
   }
   if (event.target.id === "note-form") {
     const data = new FormData(event.target);

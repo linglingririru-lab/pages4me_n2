@@ -1175,6 +1175,31 @@ p {
   background: #f7fbfb;
 }
 
+.panel-description {
+  margin: -4px 0 18px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.backlog-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.backlog-form .primary-btn {
+  justify-self: start;
+}
+
+.field > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
 .desk-list,
 .note-grid {
   display: grid;
@@ -1200,7 +1225,8 @@ p {
 }
 
 .desk-link small,
-.desk-link strong {
+.desk-link strong,
+.desk-link span {
   display: block;
 }
 
@@ -1208,6 +1234,13 @@ p {
   margin-bottom: 3px;
   color: var(--ink-soft);
   font-size: 9px;
+}
+
+.desk-link span {
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.65;
 }
 
 .training-note {
@@ -1238,6 +1271,10 @@ p {
   color: #3b5664;
   font-size: 12px;
   line-height: 1.8;
+}
+
+.training-note p.titleless {
+  margin-top: 14px;
 }
 
 .save-later {

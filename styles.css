@@ -24,6 +24,7 @@ html {
 
 body {
   margin: 0;
+  overflow-x: hidden;
   color: var(--ink);
   background: var(--paper);
   font-family: "Noto Sans JP", sans-serif;
@@ -182,7 +183,7 @@ main {
   position: relative;
   display: grid;
   min-height: 570px;
-  grid-template-columns: 1fr 1.08fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
 }
@@ -193,6 +194,8 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-width: 0;
+  max-width: 100%;
   padding: 65px 4vw 70px 7vw;
 }
 
@@ -269,7 +272,9 @@ p {
 .search-box {
   display: flex;
   align-items: center;
+  width: 100%;
   max-width: 620px;
+  min-width: 0;
   padding: 8px 8px 8px 21px;
   border: 1px solid #b7cdd5;
   border-radius: 12px;
@@ -305,6 +310,7 @@ p {
 }
 
 .search-box input {
+  width: 0;
   min-width: 0;
   flex: 1;
   padding: 10px 0;
@@ -1681,7 +1687,7 @@ footer p {
 
   .hero {
     min-height: auto;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-copy {
@@ -1784,7 +1790,8 @@ footer p {
   }
 
   .hero-copy {
-    padding-top: 45px;
+    width: 100%;
+    padding: 42px 7vw 24px;
   }
 
   .hero h1 {
@@ -1792,17 +1799,44 @@ footer p {
   }
 
   .search-box {
+    width: 100%;
+    max-width: 100%;
+    padding: 6px 6px 6px 15px;
     box-shadow: 0 5px 18px rgba(48, 86, 104, 0.08);
   }
 
+  .search-box input {
+    min-width: 0;
+    padding: 9px 0;
+    font-size: 13px;
+    text-overflow: ellipsis;
+  }
+
+  .search-icon {
+    margin-right: 10px;
+  }
+
   .search-box .primary-btn {
-    padding: 10px 12px;
+    flex: none;
+    padding: 10px 11px;
     font-size: 11px;
+    white-space: nowrap;
   }
 
   .hero-art {
-    min-height: 165px;
-    max-height: 190px;
+    min-height: 96px;
+    max-height: 110px;
+    margin-top: 2px;
+  }
+
+  .hero-art img {
+    object-position: center 47%;
+  }
+
+  .hero-art::after {
+    background:
+      linear-gradient(180deg, var(--paper), transparent 30%, transparent 72%, var(--paper)),
+      linear-gradient(90deg, var(--paper), transparent 18%, transparent 82%, var(--paper));
   }
 
   .section {

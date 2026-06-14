@@ -437,14 +437,17 @@ const seedKeywords = [...coreKeywords, ...quickKeywords];
 
 const sourceCatalog = {
   Java: [
-    { label: "Oracle Java Tutorials", url: "https://docs.oracle.com/javase/tutorial/" },
+    { label: "Oracle: javaコマンドと引数", url: "https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html" },
+    { label: "Oracle: メソッドの定義", url: "https://docs.oracle.com/javase/tutorial/java/javaOO/methods.html" },
     { label: "Java SE API Documentation", url: "https://docs.oracle.com/en/java/javase/" }
   ],
   Java演習: [
-    { label: "Oracle: Language Basics", url: "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/" }
+    { label: "Oracle: Language Basics", url: "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/" },
+    { label: "Oracle: The for Statement", url: "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/for.html" }
   ],
   Linux: [
     { label: "GNU Coreutils Manual", url: "https://www.gnu.org/software/coreutils/manual/coreutils.html" },
+    { label: "GNU Bash: Exit Status", url: "https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html" },
     { label: "Linux man-pages project", url: "https://www.kernel.org/doc/man-pages/" }
   ],
   "設計・DB": [
@@ -452,10 +455,12 @@ const sourceCatalog = {
     { label: "UML 2.5.1 Specification", url: "https://www.omg.org/spec/UML/2.5.1/" }
   ],
   "Web・CSS": [
-    { label: "MDN Web Docs", url: "https://developer.mozilla.org/ja/" }
+    { label: "MDN Web Docs", url: "https://developer.mozilla.org/ja/" },
+    { label: "MDN: The box model", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model" }
   ],
   CSS: [
-    { label: "MDN: CSS", url: "https://developer.mozilla.org/ja/docs/Web/CSS" }
+    { label: "MDN: CSS", url: "https://developer.mozilla.org/ja/docs/Web/CSS" },
+    { label: "MDN: The box model", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model" }
   ],
   COBOL: [
     { label: "IBM Enterprise COBOL Documentation", url: "https://www.ibm.com/docs/en/cobol-zos" }
@@ -474,6 +479,64 @@ const sourceCatalog = {
     { label: "C language reference", url: "https://en.cppreference.com/w/c/language" },
     { label: "C++ language reference", url: "https://en.cppreference.com/w/cpp/language" },
     { label: "Microsoft C# documentation", url: "https://learn.microsoft.com/ja-jp/dotnet/csharp/" }
+  ]
+};
+
+const officialNotes = {
+  Java: [
+    "Javaランチャーでは、クラス名の後ろに書いた値がmainメソッドの文字列配列へ渡されます。JVMのオプションとプログラム側の引数は、クラス名を境に役割が分かれます。",
+    "メソッドは名前だけでなく、引数の個数・型・並びを含むシグネチャで区別されます。同じ名前でも引数リストが異なればオーバーロードできます。",
+    "Oracleの旧Java TutorialsはJDK 8基準のページを含みます。基本構文には今も役立ちますが、新しい機能は現在のJava SE資料も併せて確認します。"
+  ],
+  Java演習: [
+    "Javaのfor文は、初期化・継続条件・更新の順で状態を進めます。境界値を変えたとき、最初と最後の反復がどう変わるかを見るのが重要です。",
+    "サンプルは正解を眺めるより、条件を一つ変えて再実行した方が理解できます。特にFizzBuzzは15の判定順と上限値が観察点です。",
+    "実行結果だけでなく、例外名やコンパイラの診断も出力の一部です。失敗例を一度作ると、条件の意味が見えやすくなります。"
+  ],
+  Linux: [
+    "Bashでは多くのコマンドが終了ステータス0を成功として返し、0以外は別の状態や失敗を表します。画面の文字だけでなく終了ステータスも結果です。",
+    "パイプラインの終了ステータスは、通常は最後のコマンドのものです。`pipefail`を有効にすると途中の失敗も検出しやすくなります。",
+    "実行されたコマンドは環境変数を引き継ぎます。シェル変数と、子プロセスへ渡すためにexportされた環境変数は区別します。"
+  ],
+  "Web・CSS": [
+    "ブラウザは要素を長方形の箱として扱い、content・padding・border・marginの順に領域を組み立てます。",
+    "`box-sizing: border-box`では、指定した幅と高さにpaddingとborderを含めて計算します。レイアウトの寸法を追いやすくする定番設定です。",
+    "レスポンシブデザインは端末名を当てる作業ではなく、利用できる画面幅や入力方法に合わせて読みやすさを保つ設計です。"
+  ],
+  CSS: [
+    "CSSの見た目は一つの宣言だけで決まらず、出所・重要度・詳細度・記述順などのカスケードで最終値が選ばれます。",
+    "DevToolsでは適用中の宣言、上書きされた宣言、計算後のサイズを分けて確認できます。値を増やす前に、どの規則が勝ったかを見ます。",
+    "画面上の1pxは必ずしも物理ディスプレイの1画素ではありません。CSSピクセルは端末に依存しない論理的な単位です。"
+  ],
+  "設計・DB": [
+    "SQLは実行前に対象表と対象行を日本語で言い直すと、更新範囲の事故を減らせます。UPDATEやDELETEではWHERE句の確認が特に重要です。",
+    "UMLは図を美しくする規格ではなく、構造や振る舞いを共通の記法で伝えるための言語です。図の目的に必要な要素だけを選びます。",
+    "ER図の関係は線を引くだけでなく、『1件のAは何件のBを持てるか』と文章で読める状態にします。"
+  ],
+  COBOL: [
+    "COBOLではDATA DIVISIONの記述がデータの形を定義し、PROCEDURE DIVISIONが処理を表します。処理だけでなく桁や形式の定義を一緒に読みます。",
+    "PIC句は値の見た目と桁構成を表します。数値・文字・編集用の記号は、Javaの型名だけでは表しきれない業務形式にも関係します。",
+    "実際のCOBOL環境ではJCL、文字コード、ファイル定義など周辺要素も実行条件です。ソース単体で完結すると決めつけないことが大切です。"
+  ],
+  "開発道具": [
+    "Gitのcommitはローカル履歴への記録、pushはリモートへの送信です。同じ『保存』に見えても変更する場所が違います。",
+    "IDEの実行ボタンは、保存・コンパイル・起動・出力表示など複数の処理をまとめています。ConsoleとProblemsの両方を確認します。",
+    "道具の操作を覚えるときは、操作名より前後の状態差を見る方が応用できます。Gitならstatus、IDEならコンソールと生成物が観察点です。"
+  ],
+  Eclipse: [
+    "Eclipseのワークスペースはソース置き場だけではなく、プロジェクト一覧やIDE設定も保持します。",
+    "Javaの実行構成では、Main class、Program arguments、VM argumentsは別欄です。コマンドライン引数はProgram argumentsへ入れます。",
+    "自動ビルドが有効なら保存をきっかけにコンパイル結果が更新されます。赤い印がソース、ビルドパス、IDE状態のどこ由来か切り分けます。"
+  ],
+  基本情報: [
+    "用語問題は定義だけでなく、入力・処理・出力、時間・容量、機密性・完全性・可用性などの対比で読むと応用しやすくなります。",
+    "計算問題では式を覚える前に、単位をそろえます。bitとbyte、秒とミリ秒、10進接頭語と2進接頭語の混在が典型的な落とし穴です。",
+    "IPAのシラバスは出題範囲の地図として使えます。用語を見つけたら、同じ分類の前後にある語も一緒に確認します。"
+  ],
+  言語比較: [
+    "言語比較では構文の似た見た目より、実行環境、メモリ管理、標準ライブラリ、既存資産を比べます。",
+    "CとC++は関係が深い一方、同じ言語の新旧版ではありません。C#も.NETを中心とする別の言語です。",
+    "性能や安全性を言語名だけで断定せず、処理内容、実装、コンパイラ、ランタイム、運用条件まで含めて考えます。"
   ]
 };
 
@@ -918,6 +981,79 @@ function codeStudyFor(item) {
   };
 }
 
+function reproductionGuideFor(item) {
+  const explicit = {
+    "command-line-args": {
+      label: "ECLIPSE または TERMINAL",
+      steps: ["Hello.javaとして保存する", "ターミナルなら `javac Hello.java` でコンパイルする", "`java Hello Tanaka` を実行する"],
+      expected: "こんにちは、Tanakaさん",
+      change: "`Tanaka`を自分の名前へ変える。次に引数なしで実行し、なぜ例外になるかをargs.lengthから説明する。"
+    },
+    "java-method": {
+      label: "ECLIPSE または TERMINAL",
+      steps: ["PriceCalculator.javaとして保存する", "EclipseならRun As → Java Application、ターミナルなら `javac PriceCalculator.java`", "`java PriceCalculator` を実行する"],
+      expected: "1100",
+      change: "1000を1999へ変更し、小数部分が四捨五入ではなく切り捨てになることを確認する。"
+    },
+    "java-for-loop": {
+      label: "ECLIPSE または TERMINAL",
+      steps: ["配列とfor文をmainメソッド内へ置く", "実行前に3行の出力順を紙へ書く", "実行後、予想とConsoleを比較する"],
+      expected: "Java、Linux、Gitが配列の順番で1行ずつ表示される",
+      change: "条件を `i <= tools.length` に変えて一度失敗し、存在しない添字へ進む瞬間を確認する。"
+    },
+    "java-fizzbuzz": {
+      label: "ECLIPSE または TERMINAL",
+      steps: ["クラスのmainメソッド内へコードを置く", "まず1〜20へ上限を縮めて実行する", "3・5・15・16の出力を条件式と照合する"],
+      expected: "3はFizz、5はBuzz、15はFizzBuzz、16は16",
+      change: "15の条件を最後へ移し、15がFizzだけになる理由を確認する。"
+    }
+  };
+  if (explicit[item.id]) return explicit[item.id];
+
+  if (item.category === "Java" || item.category === "Java演習") {
+    return {
+      label: "ECLIPSE / JAVA",
+      steps: ["コードをmainメソッドを持つクラスへ置く", "実行前にConsoleへ出る値かエラーを予想する", "Run As → Java Applicationで実行し、最初に予想と違った行を探す"],
+      expected: "記事のコードに対応する値、または理解に必要なコンパイルエラー・例外",
+      change: "値・条件・引数のどれか一つだけを変え、結果が変わった理由を一文で残す。"
+    };
+  }
+  if (item.category === "Linux") {
+    return {
+      label: "TERMINAL",
+      steps: ["`pwd`で現在地を確認する", "練習用ディレクトリで記事のコマンドを一つずつ実行する", "標準出力に加えて `echo $?` で終了ステータスを確認する"],
+      expected: "コマンドによる表示、ファイル状態の変化、終了ステータス",
+      change: "存在する対象と存在しない対象の両方で実行し、表示と終了ステータスの違いを見る。"
+    };
+  }
+  if (item.category === "CSS" || item.category === "Web・CSS") {
+    return {
+      label: "BROWSER DEVTOOLS",
+      steps: ["小さなHTMLとCSSへ例を貼る", "ブラウザで開き、DevToolsで対象要素を選ぶ", "CSS宣言を一つ無効化して、箱と配置の変化を見る"],
+      expected: "指定したスタイルが画面とComputed Styleへ反映される",
+      change: "画面幅を狭め、どの幅で読みづらくなるかを確認してからmedia queryを調整する。"
+    };
+  }
+  if (item.category === "設計・DB") {
+    return {
+      label: "PAPER / SQL CONSOLE",
+      steps: ["例に登場する名詞・関係・処理を日本語で書き出す", "図やSQLの各行がどの日本語に対応するか線で結ぶ", "SQLならSELECTで対象行を確認してから変更文を考える"],
+      expected: "記号やSQLを、日本語の業務ルールとして説明できる",
+      change: "1対多を多対多へ変えた場合、どの表や関係が必要になるか考える。"
+    };
+  }
+  return {
+    label: "DESK CHECK",
+    steps: ["例を読む前に結果や関係を予想する", "入力・処理・結果、または目的・手段・制約へ分ける", "似た用語との違いを一つ書く"],
+    expected: "用語を暗記文ではなく、具体例と比較対象を使って説明できる",
+    change: "自分の研修や身近なシステムへ置き換え、同じ考え方がどこに現れるか探す。"
+  };
+}
+
+function officialNotesFor(item) {
+  return officialNotes[item.category] || officialNotes["開発道具"];
+}
+
 function triviaFor(item) {
   return triviaByCategory[item.category] || [
     ["名前の由来を調べる", "技術用語の名前には、以前の道具や歴史的な制約が残っていることがあります。"],
@@ -1303,6 +1439,8 @@ function renderKeyword(id) {
   if (!item) return renderLibrary();
   const lesson = lessonFor(item);
   const codeStudy = codeStudyFor(item);
+  const reproduction = reproductionGuideFor(item);
+  const researchedNotes = officialNotesFor(item);
   const trivia = triviaFor(item);
   const sources = sourceCatalog[item.category] || [];
   return `
@@ -1329,10 +1467,28 @@ function renderKeyword(id) {
             <span>この記事を終えたら</span>
             <ul>${lesson.goals.map(goal => `<li>${escapeHtml(goal)}</li>`).join("")}</ul>
           </section>
-          <h2 id="overview">最初に動く例を見る</h2>
+          <h2 id="overview">手元で再現する最小例</h2>
           <p>${formatInline(item.body)}</p>
+          <aside class="example-notice">
+            <strong>このページ上で自動実行する例ではありません</strong>
+            <p>${escapeHtml(reproduction.label)}で、自分の手を動かして結果を確認するための例です。実行場所と結果の見方を下にまとめています。</p>
+          </aside>
           <pre class="code-block" data-label="${escapeHtml(codeLabelFor(item.category))}"><code>${escapeHtml(item.code)}</code></pre>
-          <p class="code-caption">読む順番は、入力される値 → 条件や処理 → 出力される結果。最初から記号をすべて暗記する必要はありません。</p>
+          <div class="reproduction-grid">
+            <section>
+              <span>01 / 実行まで</span>
+              <ol>${reproduction.steps.map(step => `<li>${formatInline(step)}</li>`).join("")}</ol>
+            </section>
+            <section>
+              <span>02 / 確認する結果</span>
+              <p>${formatInline(reproduction.expected)}</p>
+            </section>
+            <section>
+              <span>03 / 一か所変える</span>
+              <p>${formatInline(reproduction.change)}</p>
+            </section>
+          </div>
+          <p class="code-caption">読む順番は、入力される値 → 条件や処理 → 出力される結果。実行前の予想を一行残すと、分からなかった場所が見つけやすくなります。</p>
           <section class="code-study" id="code-study">
             <p class="eyebrow">READ THE CODE</p>
             <h2>コードを上から追う</h2>
@@ -1367,6 +1523,19 @@ function renderKeyword(id) {
               ${section.paragraphs.map(paragraph => `<p>${formatInline(paragraph)}</p>`).join("")}
             </section>
           `).join("")}
+          <section class="researched-notes">
+            <p class="eyebrow">FROM OFFICIAL DOCS</p>
+            <h2>公式資料から、もう一段だけ深く</h2>
+            <p>仕様を最初から全部読む必要はありません。この記事に関係する部分だけ、初学者向けの観察ポイントへ言い換えました。</p>
+            <div>
+              ${researchedNotes.map((note, index) => `
+                <article>
+                  <span>${String(index + 1).padStart(2, "0")}</span>
+                  <p>${formatInline(note)}</p>
+                </article>
+              `).join("")}
+            </div>
+          </section>
           <aside class="detour-box">
             <h3>${escapeHtml(item.detourTitle)}</h3>
             <p>${escapeHtml(item.detour)}</p>
@@ -1420,7 +1589,7 @@ function renderKeyword(id) {
         <aside class="article-aside">
           <div class="toc">
             <strong>この記事の道順</strong>
-            <button data-scroll="overview">00 動く例</button>
+            <button data-scroll="overview">00 再現する例</button>
             <button data-scroll="code-study">01 コードを追う</button>
             <button data-scroll="trace">02 実行トレース</button>
             ${lesson.sections.map((section, index) => `<button data-scroll="section-${index + 1}">0${index + 1} ${escapeHtml(section.title)}</button>`).join("")}

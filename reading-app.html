@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="本との出会い、購入前の確認、読書記録とレビューを静かに残す読書アプリ"
+    />
+    <title>余白 | 読書の記憶と次の一冊</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./reading-app.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <button class="brand nav-link" data-view="home" aria-label="ホームへ">
+        <i aria-hidden="true"></i>
+        <span>余白</span>
+        <small>YOHaku</small>
+      </button>
+      <nav aria-label="メインナビゲーション">
+        <button class="nav-link active" data-view="home">見つける</button>
+        <button class="nav-link" data-view="library">本棚</button>
+        <button class="nav-link" data-view="journal">読書記録</button>
+        <button class="nav-link" data-view="reviews">レビュー</button>
+      </nav>
+      <button class="quiet-button" id="open-add-book">
+        本を追加 <span>＋</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="app-view active" id="view-home">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">A QUIET PLACE FOR THE NEXT BOOK</p>
+            <h1>読んだ記憶から、<br />次の一冊へ。</h1>
+            <p class="lead">
+              買った本を覚えておく。短い感想を残す。<br />
+              その記憶から、まだ知らない本を見つけます。
+            </p>
+            <div class="hero-actions">
+              <button class="primary-button" id="open-mood">
+                今の気分から探す <span>↗</span>
+              </button>
+              <button class="text-button" id="hero-add-record">読んだ本を記録する</button>
+            </div>
+            <div class="memory-line">
+              <span id="hero-read-count">0</span>
+              <small>冊の読書が、ここに残っています</small>
+            </div>
+          </div>
+          <figure class="hero-visual">
+            <img
+              src="./assets/reading-window-hero.png"
+              alt="霜の降りた窓辺に静かに開かれた一冊の本"
+            />
+            <figcaption>
+              <span>BOOKS LEAVE A QUIET TRACE</span>
+              <p>読み終えた時間も、<br />選ばなかった本も。</p>
+            </figcaption>
+          </figure>
+        </section>
+
+        <section class="today-grid">
+          <article class="status-card duplicate-card">
+            <p class="card-label">BEFORE YOU BUY</p>
+            <div class="status-icon">✓</div>
+            <div>
+              <h2>持っているか確認</h2>
+              <p>タイトルかISBNを入れるだけで、本棚との重複を調べます。</p>
+            </div>
+            <form id="duplicate-form" class="inline-form">
+              <input
+                id="duplicate-query"
+                type="search"
+                placeholder="タイトル / ISBN"
+                autocomplete="off"
+                required
+              />
+              <button type="submit">確認</button>
+            </form>
+            <div id="duplicate-result" class="inline-result" aria-live="polite"></div>
+          </article>
+
+          <article class="status-card reading-card">
+            <p class="card-label">READING NOW</p>
+            <div id="reading-now-content"></div>
+          </article>
+
+          <article class="status-card note-card">
+            <p class="card-label">LAST AFTERIMAGE</p>
+            <div id="last-note-content"></div>
+          </article>
+        </section>
+
+        <section class="recommend-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SELECTED FROM YOUR AFTERIMAGE</p>
+              <h2>今のあなたへ、三冊。</h2>
+            </div>
+            <button class="text-button" id="refresh-recommendations">選び直す ↻</button>
+          </div>
+          <div class="book-grid" id="recommendation-list"></div>
+        </section>
+
+        <section class="new-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">NEW ARRIVALS / JUNE 2026</p>
+              <h2>新しく届いた本</h2>
+            </div>
+            <p class="section-note">宣伝の大きさではなく、読書記録との近さから。</p>
+          </div>
+          <div class="new-list" id="new-book-list"></div>
+        </section>
+      </section>
+
+      <section class="app-view inner-view" id="view-library">
+        <header class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR PRIVATE LIBRARY</p>
+            <h1>わたしの本棚</h1>
+            <p>所有、読了、読みたい本を、ひとつの静かな棚に。</p>
+          </div>
+          <button class="primary-button" id="library-add-book">本を追加 <span>＋</span></button>
+        </header>
+        <div class="library-tools">
+          <label class="search-box">
+            <span>⌕</span>
+            <input id="library-search" type="search" placeholder="タイトル、著者、ISBNから探す" />
+          </label>
+          <div class="filter-row" id="library-filters">
+            <button class="active" data-filter="all">すべて</button>
+            <button data-filter="reading">読書中</button>
+            <button data-filter="read">読了</button>
+            <button data-filter="owned">所有</button>
+            <button data-filter="wishlist">読みたい</button>
+          </div>
+        </div>
+        <div class="library-summary" id="library-summary"></div>
+        <div class="shelf-grid" id="library-list"></div>
+        <div class="empty-state" id="library-empty" hidden>
+          <span>余</span>
+          <h2>この棚には、まだ本がありません。</h2>
+          <p>最初の一冊を記録すると、ここから読書の記憶が始まります。</p>
+        </div>
+      </section>
+
+      <section class="app-view inner-view" id="view-journal">
+        <header class="page-heading">
+          <div>
+            <p class="eyebrow">READING AFTERIMAGES</p>
+            <h1>読書記録</h1>
+            <p>感想は、一行でも。読み終えた日の温度を残します。</p>
+          </div>
+          <button class="primary-button" id="journal-add-record">記録をつける <span>＋</span></button>
+        </header>
+        <section class="journal-overview" id="journal-overview"></section>
+        <div class="journal-layout">
+          <section>
+            <div class="subheading">
+              <p>READING TIMELINE</p>
+              <h2>時間に沿って</h2>
+            </div>
+            <div class="timeline" id="journal-timeline"></div>
+          </section>
+          <aside class="tone-panel">
+            <p class="card-label">RECENT TONES</p>
+            <h2>最近の読後感</h2>
+            <div id="tone-cloud" class="tone-cloud"></div>
+            <div class="ice-orbit" aria-hidden="true"><i></i><b></b></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="app-view inner-view" id="view-reviews">
+        <header class="page-heading">
+          <div>
+            <p class="eyebrow">WORDS AFTER READING</p>
+            <h1>レビュー</h1>
+            <p>誰かの評価より、読み終えた人に残ったものを。</p>
+          </div>
+          <button class="primary-button" id="open-review">レビューを書く <span>＋</span></button>
+        </header>
+        <div class="review-layout">
+          <section>
+            <div class="review-filter">
+              <span id="review-count">0件のレビュー</span>
+              <select id="review-sort" aria-label="レビューの並び順">
+                <option value="newest">新しい順</option>
+                <option value="rating">評価の高い順</option>
+              </select>
+            </div>
+            <div class="review-feed" id="review-list"></div>
+          </section>
+          <aside class="history-panel">
+            <p class="card-label">YOUR ACTIVITY</p>
+            <h2>送信履歴</h2>
+            <p>投稿や編集の記録は、レビューを消したあとも残ります。</p>
+            <div class="history-list" id="activity-list"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button class="brand nav-link" data-view="home"><i></i><span>余白</span><small>YOHaku</small></button>
+      <p>読んだ記憶から、まだ知らない一冊へ。</p>
+      <span>DATA STAYS IN THIS BROWSER</span>
+    </footer>
+
+    <div class="modal-layer" id="modal-layer" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+
+      <section class="modal" id="book-modal" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">ADD TO YOUR LIBRARY</p>
+        <h2 id="book-modal-title">本を記録する</h2>
+        <form id="book-form">
+          <input type="hidden" id="book-id" />
+          <div class="form-grid">
+            <label class="wide">本のタイトル<input id="book-title" required /></label>
+            <label>著者<input id="book-author" required /></label>
+            <label>種類
+              <select id="book-genre">
+                <option>小説</option><option>エッセイ</option><option>短編集</option>
+                <option>ミステリー</option><option>詩歌</option><option>ノンフィクション</option>
+                <option>ビジネス</option><option>技術書</option><option>その他</option>
+              </select>
+            </label>
+            <label>ISBN（任意）<input id="book-isbn" inputmode="numeric" /></label>
+            <label>本の状態
+              <select id="book-status">
+                <option value="owned">所有・未読</option>
+                <option value="reading">読書中</option>
+                <option value="read">読了</option>
+                <option value="wishlist">読みたい</option>
+              </select>
+            </label>
+            <label>ページ数<input id="book-pages" type="number" min="1" /></label>
+            <label id="progress-field">現在のページ<input id="book-progress" type="number" min="0" /></label>
+            <label class="wide">この本の気配<input id="book-tone" placeholder="静か、少し不穏、冬の朝のような" /></label>
+          </div>
+          <div id="book-duplicate-warning" class="form-warning" hidden></div>
+          <div class="form-actions">
+            <button type="button" class="text-button danger-button" id="delete-book" hidden>この本を削除</button>
+            <button type="submit" class="primary-button">本棚に保存 <span>→</span></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="modal" id="record-modal" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">LEAVE AN AFTERIMAGE</p>
+        <h2 id="record-modal-title">読書の記録を残す</h2>
+        <form id="record-form">
+          <div class="form-grid">
+            <label class="wide">本を選ぶ<select id="record-book" required></select></label>
+            <label>日付<input id="record-date" type="date" required /></label>
+            <label>読書の状態
+              <select id="record-status">
+                <option value="read">読み終えた</option>
+                <option value="reading">読書中</option>
+                <option value="owned">いったん閉じた</option>
+              </select>
+            </label>
+            <label>評価
+              <select id="record-rating">
+                <option value="5">5 — 忘れたくない</option>
+                <option value="4" selected>4 — とてもよかった</option>
+                <option value="3">3 — よかった</option>
+                <option value="2">2 — 少し合わなかった</option>
+                <option value="1">1 — 合わなかった</option>
+              </select>
+            </label>
+            <label>読後の気配<input id="record-tone" placeholder="静けさが残る" /></label>
+            <label class="wide">短い記憶<textarea id="record-note" rows="4" placeholder="最後の数ページだけ、温度が違った。"></textarea></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-button">記録を保存 <span>→</span></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="modal" id="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">SHARE YOUR AFTERIMAGE</p>
+        <h2 id="review-modal-title">レビューを書く</h2>
+        <form id="review-form">
+          <input type="hidden" id="review-id" />
+          <div class="form-grid">
+            <label class="wide">本を選ぶ<select id="review-book" required></select></label>
+            <label>表示名<input id="review-name" maxlength="24" value="わたし" required /></label>
+            <label>評価
+              <select id="review-rating">
+                <option value="5">★★★★★</option><option value="4" selected>★★★★☆</option>
+                <option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option>
+                <option value="1">★☆☆☆☆</option>
+              </select>
+            </label>
+            <label class="wide">見出し<input id="review-heading" maxlength="60" placeholder="静かなのに、ずっと残る" required /></label>
+            <label class="wide">レビュー<textarea id="review-body" rows="6" maxlength="1000" required></textarea></label>
+            <label class="checkbox-label wide">
+              <input id="review-spoiler" type="checkbox" />
+              <span>物語の内容に触れています（ネタバレ）</span>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-button">レビューを送信 <span>→</span></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="modal mood-modal" id="mood-modal" role="dialog" aria-modal="true" aria-labelledby="mood-modal-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">FIND BY FEELING</p>
+        <h2 id="mood-modal-title">今日は、どんな読書を。</h2>
+        <p>ジャンルではなく、読み終えたあとに欲しい感覚を選んでください。</p>
+        <div class="mood-options" id="mood-options">
+          <button data-mood="静か">静かでいたい</button>
+          <button data-mood="不穏">少し不穏なもの</button>
+          <button data-mood="遠く">遠くへ行きたい</button>
+          <button data-mood="やさしい">やさしさが欲しい</button>
+          <button data-mood="鋭い">短く鋭いもの</button>
+          <button data-mood="考える">ゆっくり考えたい</button>
+        </div>
+        <div id="mood-result" class="mood-result"></div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./reading-app.js"></script>
+  </body>
+</html>

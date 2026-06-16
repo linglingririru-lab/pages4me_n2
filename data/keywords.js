@@ -404,13 +404,65 @@ const topicExamples = {
   "冗長化": "利用者\n  ↓ Load Balancer\nApp 1  App 2\n  ↓\nPrimary DB → Standby DB\n# 冗長化しても切替手順と監視が必要"
 };
 
+const extraTopicGroups = {
+  Java: ["プリミティブ型と参照型", "StringBuilder", "equalsと==", "ComparableとComparator", "Optional", "Enum", "Date and Time API", "try-with-resources", "ファイル入出力", "BufferedReader", "Scanner", "BigDecimal", "メソッド参照", "record", "アノテーション", "assert", "可変長引数", "ネストしたループ"],
+  Linux: ["head・tail", "tail -f", "wc", "sort・uniq", "xargs", "awk", "sed", "chmod", "chown", "lnとシンボリックリンク", "du・df", "systemctl", "journalctl", "crontab", "scp・rsync", "ホスト名とポート", "ファイルディスクリプタ", "終了ステータス"],
+  "設計・DB": ["論理設計と物理設計", "概念モデル", "リレーション", "カーディナリティ", "多対多の中間テーブル", "一意制約", "NOT NULL制約", "CHECK制約", "ビュー", "サブクエリ", "HAVING", "ORDER BY", "楽観ロック", "悲観ロック", "デッドロック", "N+1問題", "SQLインジェクション対策", "監査ログ"],
+  "Web・CSS": ["HTMLエスケープ", "アクセシビリティ", "aria属性", "CORS", "キャッシュ", "LocalStorage", "SessionStorage", "Fetch API", "Promise", "async/await", "イベントバブリング", "フォームバリデーション", "メディアクエリ", "z-index", "overflow", "display noneとvisibility hidden"],
+  "開発道具": ["Git clone", "Git pull・fetch", "Git rebase", "Git stash", "Git tag", "Git revert", "Git reset", "差分レビュー", "ログのgrep", "環境差分", "設定ファイル", "CI/CD", "静的解析", "コードフォーマッタ", "パッケージマネージャ", "バージョン番号"],
+  基本情報: ["OS", "カーネル", "仮想記憶", "キャッシュメモリ", "割込み", "スループット", "レスポンスタイム", "稼働率", "MTBF・MTTR", "RAID", "正規表現", "スタックトレース", "文字コード", "UTF-8", "浮動小数点", "排他制御", "デッドロック", "キューイング"],
+  セキュリティ: ["CIA", "最小権限", "多要素認証", "パスキー", "ソルト", "レインボーテーブル", "CSRF", "XSS", "SQLインジェクション", "クリックジャッキング", "セッション固定攻撃", "ゼロトラスト", "脅威モデリング", "WAF", "脆弱性診断", "CVE", "パッチ適用", "秘密情報管理"],
+  AI: ["機械学習", "教師あり学習", "教師なし学習", "生成AI", "LLM", "トークン", "プロンプト", "RAG", "ベクトル検索", "埋め込み", "ハルシネーション", "ファインチューニング", "推論", "温度パラメータ", "コンテキストウィンドウ", "AIエージェント"],
+  COBOL: ["IDENTIFICATION DIVISION", "ENVIRONMENT DIVISION", "DATA DIVISION", "PROCEDURE DIVISION", "WORKING-STORAGE SECTION", "PIC句", "レベル番号", "MOVE", "PERFORM", "IF文", "EVALUATE", "DISPLAY", "ACCEPT", "COPY句", "固定長ファイル", "JCL"],
+  クラウド: ["IaaS・PaaS・SaaS", "リージョンとAZ", "ロードバランサ", "オートスケーリング", "オブジェクトストレージ", "マネージドDB", "IAM", "VPC", "サブネット", "セキュリティグループ", "コンテナ", "Docker", "Kubernetes", "サーバーレス"],
+  テスト: ["正常系", "異常系", "境界値", "同値分割", "テスト観点", "テストデータ", "モック", "スタブ", "結合テスト", "総合テスト", "回帰テスト", "受入テスト", "テスト自動化", "カバレッジ"],
+  SIer業務: ["要件定義", "基本設計", "詳細設計", "製造", "単体試験", "結合試験", "総合試験", "運用保守", "障害対応", "エスカレーション", "議事録", "課題管理", "WBS", "工数見積もり", "レビュー指摘", "リリース判定"]
+};
+
+Object.entries(extraTopicGroups).forEach(([category, titles]) => {
+  topicGroups[category] = [...(topicGroups[category] || []), ...titles];
+});
+
+const categoryStudyBriefs = {
+  Java: ["Javaコードの中でどの値を扱うか", "Eclipseや小さなmainで動きを確かめる", "型・例外・API名をセットで覚える"],
+  Linux: ["端末で何を入力するか", "実行前後のファイル・表示・終了ステータスを見る", "危ない操作は練習用ディレクトリで試す"],
+  "設計・DB": ["業務の名詞と関係を整理する", "図・SQL・日本語説明を対応させる", "更新範囲と制約を必ず確認する"],
+  "Web・CSS": ["ブラウザでどの要素に効くか見る", "DevToolsで適用ルールと通信を確認する", "見た目とデータ送信を分けて考える"],
+  "開発道具": ["操作前の状態を確認する", "操作後に差分・ログ・成果物を見る", "チーム作業で誰に何を渡すか考える"],
+  基本情報: ["用語を対比で覚える", "単位・境界・前提条件を確認する", "実務の小さな例に置き換える"],
+  セキュリティ: ["守りたい資産と攻撃経路を分ける", "入力・認証・権限・ログのどこに関わるか見る", "便利さと安全性のトレードオフを考える"],
+  AI: ["入力データ・モデル・出力の関係を見る", "できることと間違え方をセットで覚える", "業務で使う場合の確認ポイントを考える"],
+  COBOL: ["DIVISIONとSECTIONで大きく読む", "データ定義と処理を行き来する", "ファイル・JCL・文字コードも実行条件として見る"],
+  クラウド: ["自分で管理する範囲と任せる範囲を分ける", "ネットワーク・権限・料金をセットで見る", "可用性と運用の観点で考える"],
+  テスト: ["入力・操作・期待結果を具体化する", "正常・境界・異常を分ける", "再現できる形で残す"],
+  SIer業務: ["成果物と合意事項を意識する", "誰が何を判断するための作業か考える", "曖昧な言葉を確認可能な形へ直す"]
+};
+
+function topicDefinitionFor(title, category) {
+  if (topicDefinitions[title]) return topicDefinitions[title];
+  const brief = categoryStudyBriefs[category] || categoryStudyBriefs.基本情報;
+  return `${title}は${category}を学ぶうえで出会いやすいテーマです。まず「何を扱う言葉か」「どの場面で使うか」「似た言葉と何が違うか」に分け、${brief[0]}ところから理解します。`;
+}
+
+function topicExampleFor(title, category) {
+  if (topicExamples[title]) return topicExamples[title];
+  const brief = categoryStudyBriefs[category] || categoryStudyBriefs.基本情報;
+  return `1. 「${title}」を一文で説明する\n2. 研修資料や画面から実例を一つ探す\n3. ${brief[1]}\n4. ${brief[2]}`;
+}
+
 const categorySlugs = {
   Java: "java",
   Linux: "linux",
   "設計・DB": "design-db",
   "Web・CSS": "web-css",
   "開発道具": "tools",
-  基本情報: "fundamentals"
+  基本情報: "fundamentals",
+  セキュリティ: "security",
+  AI: "ai",
+  COBOL: "cobol",
+  クラウド: "cloud",
+  テスト: "testing",
+  SIer業務: "sier"
 };
 
 const quickKeywords = Object.entries(topicGroups).flatMap(([category, titles]) =>
@@ -421,8 +473,8 @@ const quickKeywords = Object.entries(topicGroups).flatMap(([category, titles]) =
     level: "予習カード",
     summary: `${title}を研修前後の3分で確認。意味、使いどころ、次に調べる言葉を短く整理。`,
     lead: `${title}は、研修や実装でよく出会う基礎テーマです。`,
-    body: topicDefinitions[title] || `${title}が何を解決するものかを、入力・処理・結果に分けて理解します。`,
-    code: topicExamples[title] || `1. 「${title}」を自分の言葉で一文にする\n2. 手元の資料から実例を一つ探す`,
+    body: topicDefinitionFor(title, category),
+    code: topicExampleFor(title, category),
     detourTitle: "研修での拾い方",
     detour: "講師の説明を全部書き取るより、「目的」「具体例」「分からない語」の3点だけ残すと復習しやすくなります。",
     related: [

@@ -7,7 +7,7 @@
   --muted: #77828d;
   --faint: #9da7b0;
   --violet: #8287a4;
-  --line: rgba(43, 58, 72, 0.13);
+  --line: rgba(43, 58, 72, 0.2);
   --glass: rgba(248, 250, 252, 0.78);
   --shadow: 0 28px 80px rgba(68, 82, 96, 0.12);
 }
@@ -65,19 +65,18 @@ img { display: block; max-width: 100%; }
 .site-header nav { display: flex; height: 100%; gap: 32px; }
 .site-header nav button {
   position: relative;
-  padding: 0 2px;
+  align-self: center;
+  padding: 8px 13px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: #7c8791;
   font-size: 10px;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
 }
-.site-header nav button.active { color: var(--ink); }
-.site-header nav button.active::after {
-  position: absolute;
-  right: 0;
-  bottom: 17px;
-  left: 0;
-  height: 1px;
-  background: #7e8d9a;
-  content: "";
+.site-header nav button.active {
+  border-color: rgba(126,141,154,.22);
+  background: rgba(255,255,255,.54);
+  color: var(--ink);
 }
 .quiet-button {
   justify-self: end;
@@ -148,10 +147,13 @@ img { display: block; max-width: 100%; }
   align-items: baseline;
   gap: 9px;
   margin-top: 70px;
+  padding: 0;
   color: #8c97a0;
+  text-align: left;
 }
 .memory-line span { font: 400 29px "Shippori Mincho", serif; }
 .memory-line small { font-size: 9px; }
+.memory-line:hover small { border-bottom: 1px solid rgba(140,151,160,.55); }
 .hero-visual {
   position: relative;
   min-width: 0;
@@ -190,7 +192,7 @@ img { display: block; max-width: 100%; }
 .today-grid {
   display: grid;
   padding: 0 clamp(24px, 5vw, 76px);
-  grid-template-columns: 1.15fr .92fr .93fr;
+  grid-template-columns: .92fr 1fr 1.08fr;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
@@ -199,6 +201,7 @@ img { display: block; max-width: 100%; }
   min-height: 235px;
   padding: 38px 34px;
   border-right: 1px solid var(--line);
+  background: rgba(250, 251, 252, .42);
 }
 .status-card:last-child { border-right: 0; }
 .status-card h2 { margin: 0 0 7px; font: 500 17px "Shippori Mincho", serif; }
@@ -251,14 +254,21 @@ img { display: block; max-width: 100%; }
 .progress-track i { display: block; height: 100%; background: #8893a5; }
 .empty-copy { margin-top: 34px; }
 .empty-copy button { margin-top: 10px; }
-.note-card blockquote {
-  margin: 32px 0 15px;
-  font: 400 16px/1.85 "Shippori Mincho", serif;
-}
+.note-card h2 { margin: 30px 0 6px; font: 500 18px "Shippori Mincho", serif; }
+.note-card p { margin: 0 0 12px; color: #74808b; font-size: 9px; }
+.note-card blockquote { margin: 32px 0 15px; font: 400 16px/1.85 "Shippori Mincho", serif; }
 .note-card small { color: #8c969e; font-size: 8px; }
+.note-card .text-button { margin-top: 15px; }
+.quick-record-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.quick-record-card .primary-button { align-self: flex-start; }
 
-.recommend-section, .new-section { padding: 110px clamp(24px, 7vw, 108px); }
+.recommend-section, .new-section, .catalog-section { padding: 110px clamp(24px, 7vw, 108px); }
 .recommend-section { background: var(--snow); }
+.catalog-section { border-bottom: 1px solid var(--line); background: #f7f9fa; }
 .new-section { border-top: 1px solid var(--line); background: #eef2f5; }
 .section-heading {
   display: flex;
@@ -268,7 +278,48 @@ img { display: block; max-width: 100%; }
 }
 .section-heading h2 { margin: 0; font: 500 clamp(30px, 3.2vw, 46px) "Shippori Mincho", serif; letter-spacing: -.04em; }
 .section-heading .eyebrow { margin-bottom: 14px; }
+.section-lead { margin: 12px 0 0; color: #647381; font-size: 10px; letter-spacing: .08em; }
 .section-note { max-width: 300px; margin: 0; color: #7c8791; font-size: 9px; line-height: 1.8; }
+.catalog-search-box {
+  display: flex;
+  align-items: center;
+  width: min(620px, 100%);
+  margin-bottom: 30px;
+  border-bottom: 1px solid #8795a1;
+}
+.catalog-search-box span { color: #6f7d88; font-size: 18px; transform: rotate(-15deg); }
+.catalog-search-box input {
+  width: 100%;
+  padding: 15px 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+}
+.catalog-results { display: grid; border-top: 1px solid var(--line); }
+.catalog-item {
+  display: grid;
+  align-items: center;
+  padding: 18px 0;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.catalog-item h3 { margin: 0 0 5px; font: 500 17px "Shippori Mincho", serif; }
+.catalog-item span { color: #71808c; font-size: 9px; }
+.catalog-actions { display: flex; gap: 12px; }
+.catalog-actions button {
+  min-width: 82px;
+  padding: 8px 0;
+  border-bottom: 1px solid #8c98a4;
+  color: #566572;
+  font-size: 8px;
+}
+.catalog-actions button[aria-label] {
+  color: #6f7387;
+  border-color: #b6bbc8;
+}
 .book-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
 .book-card {
   position: relative;
@@ -417,7 +468,24 @@ img { display: block; max-width: 100%; }
 .shelf-card h2 { margin: 14px 0 3px; font: 500 15px "Shippori Mincho", serif; }
 .shelf-card p { margin: 0; color: #84909a; font-size: 8px; }
 .shelf-card small { display: block; margin-top: 10px; color: #929ca5; font-size: 7px; }
+.shelf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+}
+.shelf-actions button {
+  padding: 6px 0;
+  border-bottom: 1px solid #aab5be;
+  color: #5c6b78;
+  font-size: 8px;
+}
+.shelf-actions button:first-child {
+  color: #425160;
+  border-color: #7e8d9a;
+}
 .empty-state { padding: 100px 20px; text-align: center; }
+.compact-empty { padding: 54px 20px; }
 .empty-state span { color: #c6d0d7; font: 400 80px "Shippori Mincho", serif; }
 .empty-state h2 { font: 500 20px "Shippori Mincho", serif; }
 .empty-state p { color: var(--muted); font-size: 9px; }
@@ -458,6 +526,8 @@ img { display: block; max-width: 100%; }
 .timeline-copy h3 { margin: 0 0 4px; font: 500 17px "Shippori Mincho", serif; }
 .timeline-copy > span { color: #89949e; font-size: 8px; }
 .timeline-copy blockquote { margin: 15px 0 9px; color: #56636f; font: 400 14px/1.9 "Shippori Mincho", serif; }
+.timeline-actions { display: flex; gap: 18px; margin-top: 13px; }
+.danger-link { color: #8a6f76; border-color: #c7b5ba; }
 .stars { color: #858ba1; font-size: 9px; letter-spacing: .12em; }
 .tone-panel {
   position: sticky;
@@ -563,9 +633,26 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
 .form-grid textarea { padding: 12px; border: 1px solid #c8d0d7; resize: vertical; line-height: 1.8; }
 .checkbox-label { display: flex; align-items: center; gap: 9px; }
 .checkbox-label input { display: inline; width: auto; margin: 0; }
+.auth-copy { margin: -14px 0 30px; color: #75828d; font-size: 10px; line-height: 2; }
 .form-warning { margin-top: 18px; padding: 12px 14px; border: 1px solid #c6c3d1; background: #ecebf1; color: #67677d; font-size: 9px; }
 .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 25px; margin-top: 35px; }
 .danger-button { margin-right: auto; color: #8a6f76; border-color: #c7b5ba; }
+.record-suggestions {
+  display: grid;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.record-suggestions button {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  color: #596774;
+  text-align: left;
+}
+.record-suggestions strong { font: 500 13px "Shippori Mincho", serif; }
+.record-suggestions span { color: #7f8b95; font-size: 8px; }
 .draw-modal {
   width: 100%;
   max-width: none;
@@ -589,6 +676,12 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   letter-spacing: .08em;
 }
 .draw-close i { font-size: 18px; font-style: normal; font-weight: 200; }
+.draw-brand {
+  position: absolute;
+  z-index: 12;
+  top: 28px;
+  left: 34px;
+}
 .draw-step { display: none; width: 100%; height: 100%; }
 .draw-step.active { display: grid; animation: draw-step-in .65s ease both; }
 @keyframes draw-step-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -643,6 +736,15 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   background: rgba(224,230,235,.78);
   transform: translateY(-2px);
 }
+.fortune-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  color: #5f6f7c;
+  font-size: 9px;
+}
+.fortune-toggle input { accent-color: #596979; }
 #draw-ready-step { position: relative; background: #e7ecef; }
 .draw-window {
   position: relative;
@@ -712,14 +814,29 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
 .draw-fortune-button {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 210px;
-  padding: 15px 17px;
-  background: #596979;
-  color: white;
+  justify-content: center;
+  gap: 14px;
+  min-width: 210px;
+  padding: 14px 18px 15px;
+  border-top: 1px solid rgba(89,105,121,.34);
+  border-bottom: 1px solid rgba(89,105,121,.34);
+  color: #4f6070;
   font-size: 10px;
+  letter-spacing: .12em;
+  transition: color .25s ease, border-color .25s ease, transform .25s ease;
 }
-.draw-fortune-button i { color: #d9dfe4; font-style: normal; }
+.draw-fortune-button:hover {
+  border-color: rgba(64,80,96,.62);
+  color: #354657;
+  transform: translateY(-1px);
+}
+.draw-fortune-button i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: .62;
+}
 .draw-ready-copy > small { margin-top: 17px; color: #8b969f; font-size: 7px; }
 .draw-window.drawing .draw-ready-copy, .draw-window.revealed .draw-ready-copy {
   opacity: 0;
@@ -818,14 +935,15 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
     backdrop-filter: none;
   }
   .site-header nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 50; justify-content: space-around; height: 58px; border-top: 1px solid var(--line); background: rgba(244,246,248,.96); backdrop-filter: blur(18px); }
-  .site-header nav button { flex: 1; }
-  .site-header nav button.active::after { right: 38%; bottom: 10px; left: 38%; }
+  .site-header nav button { flex: 1; justify-content: center; border-radius: 0; }
   .quiet-button { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; }
   .hero-copy { min-height: 570px; padding: 80px 8vw 60px; }
   .hero-visual { height: 65vw; min-height: 400px; }
   .today-grid { grid-template-columns: 1fr; }
   .status-card { border-right: 0; border-bottom: 1px solid var(--line); }
+  .catalog-item { grid-template-columns: 1fr; gap: 12px; }
+  .catalog-actions { justify-content: flex-start; }
   .book-grid { grid-template-columns: repeat(2, 1fr); }
   .shelf-grid { grid-template-columns: repeat(3, 1fr); }
   .journal-layout, .review-layout { grid-template-columns: 1fr; }
@@ -851,7 +969,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   }
   .today-grid { padding: 0 20px; }
   .status-card { padding: 34px 10px; }
-  .recommend-section, .new-section, .inner-view { padding: 75px 24px 90px; }
+  .recommend-section, .new-section, .catalog-section, .inner-view { padding: 75px 24px 90px; }
   .section-heading, .page-heading { align-items: start; flex-direction: column; gap: 24px; }
   .book-grid { grid-template-columns: 1fr; gap: 42px; }
   .new-item { grid-template-columns: 45px 1fr auto; gap: 15px; }
@@ -868,6 +986,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .form-grid .wide { grid-column: auto; }
   .draw-close { top: 20px; right: 20px; }
   .draw-close span { display: none; }
+  .draw-brand { top: 20px; left: 20px; }
   #draw-select-step { padding: 76px 24px 80px; gap: 32px; }
   .draw-step-copy h2 { font-size: 38px; }
   .draw-step-copy > p:last-child { margin-top: 18px; }
@@ -884,6 +1003,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .fortune-copy h3 { font-size: 25px; }
   .fortune-copy > p { margin: 13px 0; font-size: 8px; }
   .fortune-actions { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .record-suggestions button { align-items: flex-start; flex-direction: column; gap: 4px; }
   .back-to-moods { bottom: 74px; left: 20px; }
   footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 15px; padding: 30px 24px; }
   footer p { margin: 0; }

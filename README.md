@@ -12,6 +12,32 @@ python3 -m http.server 8000
 
 ブラウザで `http://localhost:8000` を開いてください。
 
+読書アプリは `reading-app.html` です。実在本カタログのJSON読み込みまで確認する場合は、直接ファイルを開くよりローカルサーバー経由がおすすめです。
+
+```bash
+python3 -m http.server 8000
+```
+
+ブラウザで `http://localhost:8000/reading-app.html` を開いてください。
+
+## 読書アプリのDB同期
+
+初期状態ではブラウザの `localStorage` に保存します。Supabaseを使う場合は、Supabase SQL Editorで `supabase-schema.sql` を実行してから、`supabase-config.js` に公開用の Project URL と anon key を設定します。
+
+```js
+window.YOHAKU_SUPABASE = {
+  enabled: true,
+  url: "https://xxxxx.supabase.co",
+  anonKey: "public-anon-key",
+  authRequired: true,
+  ownerId: "local-preview"
+};
+```
+
+DB同期はSupabase Authのメールリンクログインを使います。ログイン後は `auth.uid()` ごとに本棚、読書記録、レビュー履歴を分けて保存します。本マスタは全員が読めますが、追加・更新はSupabase側のSQLや管理画面から行う想定です。
+
+Supabase側では Authentication の Site URL に公開先URLを設定し、必要なら Redirect URLs にローカル確認用の `http://localhost:8000/reading-app.html` も追加してください。
+
 ## 主な機能
 
 - Java、Linux、CSS、Eclipse、設計・DBなど100件以上の教材図鑑

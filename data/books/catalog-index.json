@@ -1,0 +1,8 @@
+[
+  {
+    "id": "japanese-fiction",
+    "label": "Japanese fiction",
+    "path": "./data/books/japanese-fiction.json",
+    "version": "2026-06-demo"
+  }
+]

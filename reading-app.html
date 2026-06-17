@@ -24,14 +24,15 @@
         <small>YOHaku</small>
       </button>
       <nav aria-label="メインナビゲーション">
-        <button class="nav-link active" data-view="home">見つける</button>
+        <button class="nav-link active" data-view="home">記録する</button>
         <button class="nav-link" data-view="library">本棚</button>
         <button class="nav-link" data-view="journal">読書記録</button>
         <button class="nav-link" data-view="reviews">レビュー</button>
       </nav>
       <button class="quiet-button" id="open-add-book">
-        本を追加 <span>＋</span>
+        本棚に追加 <span>＋</span>
       </button>
+      <button class="quiet-button auth-button" id="auth-button">同期ログイン</button>
     </header>
 
     <main>
@@ -45,15 +46,15 @@
               その記憶から、まだ知らない本を見つけます。
             </p>
             <div class="hero-actions">
-              <button class="primary-button" id="open-mood">
-                今の気分から探す <span>↗</span>
+              <button class="primary-button" id="hero-add-record">
+                読んだ本を記録する <span>＋</span>
               </button>
-              <button class="text-button" id="hero-add-record">読んだ本を記録する</button>
+              <button class="text-button" id="open-mood">気分から一冊を選ぶ</button>
             </div>
-            <div class="memory-line">
+            <button class="memory-line" data-action="view-journal">
               <span id="hero-read-count">0</span>
-              <small>冊の読書が、ここに残っています</small>
-            </div>
+              <small id="hero-record-label">件の記録が、ここに残っています</small>
+            </button>
           </div>
           <figure class="hero-visual">
             <img
@@ -68,18 +69,34 @@
         </section>
 
         <section class="today-grid">
+          <article class="status-card quick-record-card">
+            <p class="card-label">QUICK RECORD</p>
+            <div>
+              <h2>読んだ本を残す</h2>
+              <p>タイトルと作者だけで記録できます。日付は今日で入ります。</p>
+            </div>
+            <button class="primary-button" data-action="record-new">
+              記録をつける <span>→</span>
+            </button>
+          </article>
+
+          <article class="status-card note-card">
+            <p class="card-label">RECENT RECORD</p>
+            <div id="last-note-content"></div>
+          </article>
+
           <article class="status-card duplicate-card">
-            <p class="card-label">BEFORE YOU BUY</p>
+            <p class="card-label">BEFORE BUYING</p>
             <div class="status-icon">✓</div>
             <div>
               <h2>持っているか確認</h2>
-              <p>タイトルかISBNを入れるだけで、本棚との重複を調べます。</p>
+              <p>タイトルと作者を中心に、ISBNや表記ゆれも見て探します。</p>
             </div>
             <form id="duplicate-form" class="inline-form">
               <input
                 id="duplicate-query"
                 type="search"
-                placeholder="タイトル / ISBN"
+                placeholder="タイトル / 作者 / ISBN"
                 autocomplete="off"
                 required
               />
@@ -88,22 +105,34 @@
             <div id="duplicate-result" class="inline-result" aria-live="polite"></div>
           </article>
 
-          <article class="status-card reading-card">
-            <p class="card-label">READING NOW</p>
-            <div id="reading-now-content"></div>
-          </article>
+        </section>
 
-          <article class="status-card note-card">
-            <p class="card-label">LAST AFTERIMAGE</p>
-            <div id="last-note-content"></div>
-          </article>
+        <section class="catalog-section" id="catalog-search-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">BOOK CATALOG / JAPANESE FICTION</p>
+              <h2>本を検索する</h2>
+              <p class="section-lead">読んだ本なら記録へ。まだなら、読みたい本へ。</p>
+            </div>
+            <p class="section-note">タイトルと作者を優先して、同じ本や近い表記を探します。</p>
+          </div>
+          <label class="catalog-search-box">
+            <span>⌕</span>
+            <input
+              id="catalog-search"
+              type="search"
+              placeholder="タイトル・作者で検索"
+              autocomplete="off"
+            />
+          </label>
+          <div class="catalog-results" id="catalog-results"></div>
         </section>
 
         <section class="recommend-section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">SELECTED FROM YOUR AFTERIMAGE</p>
-              <h2>今のあなたへ、三冊。</h2>
+              <p class="eyebrow">SELECTED FROM REAL BOOKS</p>
+              <h2>少し外側から、三冊。</h2>
             </div>
             <button class="text-button" id="refresh-recommendations">選び直す ↻</button>
           </div>
@@ -114,9 +143,9 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">NEW ARRIVALS / JUNE 2026</p>
-              <h2>新しく届いた本</h2>
+              <h2>気になる新刊</h2>
             </div>
-            <p class="section-note">宣伝の大きさではなく、読書記録との近さから。</p>
+            <p class="section-note">実際に刊行予定・刊行済みの本から、静かな候補を置いています。</p>
           </div>
           <div class="new-list" id="new-book-list"></div>
         </section>
@@ -127,9 +156,9 @@
           <div>
             <p class="eyebrow">YOUR PRIVATE LIBRARY</p>
             <h1>わたしの本棚</h1>
-            <p>所有、読了、読みたい本を、ひとつの静かな棚に。</p>
+            <p>読了、読書中、あとで読みたい本を、重複しないようにまとめます。</p>
           </div>
-          <button class="primary-button" id="library-add-book">本を追加 <span>＋</span></button>
+          <button class="primary-button" id="library-add-book">本棚に追加 <span>＋</span></button>
         </header>
         <div class="library-tools">
           <label class="search-box">
@@ -141,7 +170,7 @@
             <button data-filter="reading">読書中</button>
             <button data-filter="read">読了</button>
             <button data-filter="owned">所有</button>
-            <button data-filter="wishlist">読みたい</button>
+            <button data-filter="wishlist">読みたい本</button>
           </div>
         </div>
         <div class="library-summary" id="library-summary"></div>
@@ -158,7 +187,7 @@
           <div>
             <p class="eyebrow">READING AFTERIMAGES</p>
             <h1>読書記録</h1>
-            <p>感想は、一行でも。読み終えた日の温度を残します。</p>
+            <p>読み終えた日、評価、ひとことメモをあとから編集できます。</p>
           </div>
           <button class="primary-button" id="journal-add-record">記録をつける <span>＋</span></button>
         </header>
@@ -213,7 +242,7 @@
     <footer>
       <button class="brand nav-link" data-view="home"><i></i><span>余白</span><small>YOHaku</small></button>
       <p>読んだ記憶から、まだ知らない一冊へ。</p>
-      <span>DATA STAYS IN THIS BROWSER</span>
+      <span id="sync-status">DATA STAYS IN THIS BROWSER</span>
     </footer>
 
     <div class="modal-layer" id="modal-layer" aria-hidden="true">
@@ -226,8 +255,8 @@
         <form id="book-form">
           <input type="hidden" id="book-id" />
           <div class="form-grid">
-            <label class="wide">本のタイトル<input id="book-title" required /></label>
-            <label>著者<input id="book-author" required /></label>
+            <label class="wide">タイトル（必須）<input id="book-title" required autocomplete="off" /></label>
+            <label>作者（必須）<input id="book-author" required autocomplete="off" /></label>
             <label>種類
               <select id="book-genre">
                 <option>小説</option><option>エッセイ</option><option>短編集</option>
@@ -236,12 +265,12 @@
               </select>
             </label>
             <label>ISBN（任意）<input id="book-isbn" inputmode="numeric" /></label>
-            <label>本の状態
+            <label>本棚での状態
               <select id="book-status">
                 <option value="owned">所有・未読</option>
                 <option value="reading">読書中</option>
                 <option value="read">読了</option>
-                <option value="wishlist">読みたい</option>
+                <option value="wishlist">読みたい本</option>
               </select>
             </label>
             <label>ページ数<input id="book-pages" type="number" min="1" /></label>
@@ -251,7 +280,7 @@
           <div id="book-duplicate-warning" class="form-warning" hidden></div>
           <div class="form-actions">
             <button type="button" class="text-button danger-button" id="delete-book" hidden>この本を削除</button>
-            <button type="submit" class="primary-button">本棚に保存 <span>→</span></button>
+            <button type="submit" class="primary-button">保存 <span>→</span></button>
           </div>
         </form>
       </section>
@@ -261,14 +290,18 @@
         <p class="eyebrow">LEAVE AN AFTERIMAGE</p>
         <h2 id="record-modal-title">読書の記録を残す</h2>
         <form id="record-form">
+          <input type="hidden" id="record-id" />
+          <input type="hidden" id="record-book-id" />
+          <input type="hidden" id="record-catalog-id" />
           <div class="form-grid">
-            <label class="wide">本を選ぶ<select id="record-book" required></select></label>
-            <label>日付<input id="record-date" type="date" required /></label>
-            <label>読書の状態
+            <label class="wide">タイトル（必須）<input id="record-title" required autocomplete="off" /></label>
+            <label>作者（必須）<input id="record-author" required autocomplete="off" /></label>
+            <label>読んだ日（あとから直せます）<input id="record-date" type="date" required /></label>
+            <label>この記録の状態
               <select id="record-status">
                 <option value="read">読み終えた</option>
                 <option value="reading">読書中</option>
-                <option value="owned">いったん閉じた</option>
+                <option value="owned">今日はここまで</option>
               </select>
             </label>
             <label>評価
@@ -280,10 +313,12 @@
                 <option value="1">1 — 合わなかった</option>
               </select>
             </label>
-            <label>読後の気配<input id="record-tone" placeholder="静けさが残る" /></label>
-            <label class="wide">短い記憶<textarea id="record-note" rows="4" placeholder="最後の数ページだけ、温度が違った。"></textarea></label>
+            <label>読後の印象<input id="record-tone" placeholder="静けさが残る" /></label>
+            <label class="wide">ひとことメモ<textarea id="record-note" rows="4" placeholder="最後の数ページだけ、温度が違った。"></textarea></label>
           </div>
+          <div class="record-suggestions" id="record-suggestions"></div>
           <div class="form-actions">
+            <button type="button" class="text-button danger-button" id="delete-record" hidden>この記録を削除</button>
             <button type="submit" class="primary-button">記録を保存 <span>→</span></button>
           </div>
         </form>
@@ -318,14 +353,33 @@
         </form>
       </section>
 
+      <section class="modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">SYNC YOUR LIBRARY</p>
+        <h2 id="auth-modal-title">読書記録を同期する</h2>
+        <form id="auth-form">
+          <p class="auth-copy">メールに届くリンクからログインすると、本棚・読書記録・レビュー履歴をあなたのDBに保存します。</p>
+          <div class="form-grid">
+            <label class="wide">メールアドレス<input id="auth-email" type="email" autocomplete="email" required /></label>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="text-button danger-button" id="auth-signout" hidden>ログアウト</button>
+            <button type="submit" class="primary-button">ログインリンクを送る <span>→</span></button>
+          </div>
+        </form>
+      </section>
+
       <section class="modal draw-modal" id="mood-modal" role="dialog" aria-modal="true" aria-labelledby="mood-modal-title">
+        <button class="draw-brand brand" data-close-modal aria-label="ホームへ戻る">
+          <i aria-hidden="true"></i><span>余白</span><small>YOHaku</small>
+        </button>
         <button class="draw-close" data-close-modal aria-label="選書を閉じる">
           <span>白い部屋へ戻る</span><i>×</i>
         </button>
 
         <div class="draw-step active" id="draw-select-step">
           <div class="draw-step-copy">
-            <p class="eyebrow">A BOOK FORTUNE FOR TODAY</p>
+            <p class="eyebrow">A QUIET SELECTION FOR TODAY</p>
             <span class="draw-number">01</span>
             <h2 id="mood-modal-title">今日の気配を、<br />ひとつだけ。</h2>
             <p>ジャンルではなく、読み終えたあとに欲しい感覚を選んでください。</p>
@@ -338,6 +392,10 @@
             <button data-mood="鋭い"><small>SHARPNESS</small>短く鋭いもの</button>
             <button data-mood="考える"><small>THOUGHT</small>ゆっくり考えたい</button>
           </div>
+          <label class="fortune-toggle">
+            <input id="fortune-exclude-owned" type="checkbox" checked />
+            <span>読了・本棚登録済みの本を除外する</span>
+          </label>
         </div>
 
         <div class="draw-step" id="draw-ready-step">
@@ -346,11 +404,11 @@
             <div class="frost-pane frost-pane-right"></div>
             <div class="draw-mark" aria-hidden="true"><i></i><b></b></div>
             <div class="draw-ready-copy">
-              <p class="eyebrow">YOUR BOOK FORTUNE IS READY</p>
+              <p class="eyebrow">A BOOK IS WAITING BEHIND THE FROST</p>
               <span id="selected-mood-label">静かな一冊</span>
-              <h2>霜の向こうから、<br />一冊を引く。</h2>
+              <h2>霜の向こうに、<br />今日の一冊を探す。</h2>
               <button id="draw-fortune" class="draw-fortune-button">
-                <span>一冊を引く</span><i>↗</i>
+                <span>今日の一冊を見る</span><i></i>
               </button>
               <small>同じ気配から、偶然に一冊を選びます</small>
             </div>
@@ -367,6 +425,8 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./data/books/japanese-fiction.js"></script>
+    <script src="./supabase-config.js"></script>
     <script src="./reading-app.js"></script>
   </body>
 </html>

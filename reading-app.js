@@ -1,100 +1,116 @@
 const STORAGE_KEY = "yohaku-reading-app-v1";
+const AUTH_SESSION_KEY = "yohaku-reading-auth-session-v1";
+const CATALOG_VERSION = "2026-06-demo";
+const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json";
+const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json";
+let BOOK_CATALOG = [];
+let activeView = "";
+let remoteSyncReady = false;
+let remoteSyncTimer = null;
+let authSession = loadAuthSession();
 
 const STATUS_LABELS = {
   owned: "所有・未読",
   reading: "読書中",
   read: "読了",
-  wishlist: "読みたい"
+  wishlist: "あとで読みたい"
+};
+
+const CATEGORY_LABELS = {
+  "general-fiction": "一般文芸",
+  "literary-fiction": "文学",
+  mystery: "ミステリ",
+  "modern-classics": "近代文学"
 };
 
 const COLORS = ["#dbe1e6", "#d2d9e1", "#c9d1dc", "#dddde5", "#cfd9dc", "#e0e3e6"];
 
 const newBooks = [
   {
-    title: "薄明の庭",
-    author: "水瀬 冴",
+    title: "ファイア・ドーム 上",
+    author: "辻村深月",
     genre: "小説",
-    date: "2026-06-18",
-    tone: "静か やさしい",
-    description: "薄暗い庭と、家族の記憶をめぐる連作。",
+    date: "2026-06-05",
+    tone: "緊張 物語",
+    description: "2026年6月刊行の単行本。大きな物語をゆっくり追いたい日に。",
     color: "#d5dce1"
   },
   {
-    title: "雪解け以前",
-    author: "鷺沢 透",
-    genre: "短編集",
-    date: "2026-06-21",
-    tone: "静か 鋭い",
-    description: "言葉になる直前の感情をたどる短編集。",
+    title: "わたしを庇わないで",
+    author: "石田夏穂",
+    genre: "小説",
+    date: "2026-06-05",
+    tone: "現代 鋭い",
+    description: "2026年6月刊行の単行本。言葉の角度が気になる人へ。",
     color: "#c8d2dc"
   },
   {
-    title: "静かな回路",
-    author: "白間 伊織",
-    genre: "小説",
-    date: "2026-06-24",
-    tone: "考える 不穏",
-    description: "人と機械の距離を描く、冷たい近未来小説。",
+    title: "怪談小説という名の小説怪談",
+    author: "澤村伊智",
+    genre: "ホラー",
+    date: "2026-06-16",
+    tone: "不穏 怪談",
+    description: "角川ホラー文庫の6月新刊。静かな怖さを読みたい夜に。",
     color: "#cfd0dc"
   },
   {
-    title: "遠い灯りの方へ",
-    author: "有沢 凪",
-    genre: "エッセイ",
-    date: "2026-06-28",
-    tone: "遠く やさしい",
-    description: "知らない町を歩くための、短い文章と写真。",
+    title: "三鬼",
+    author: "小林恭二",
+    genre: "小説",
+    date: "2026-06-25",
+    tone: "文学 余韻",
+    description: "講談社の6月文芸単行本。少し重心の低い小説を探す日に。",
     color: "#d8dee2"
   }
 ];
 
 const recommendationPool = [
   {
-    title: "白い岸辺",
-    author: "柊木 景",
-    genre: "短編集",
-    tone: "静か 鋭い",
-    reason: "余白の多い文章を、急がず読みたい夜に。",
+    title: "イン・ザ・メガチャーチ",
+    author: "朝井リョウ",
+    genre: "小説",
+    tone: "現代 鋭い",
+    reason: "2026年本屋大賞。いま読む空気の強さがあります。",
     color: "#d9e1e6"
   },
   {
-    title: "灯台は眠らない",
-    author: "須賀野 澪",
+    title: "地雷グリコ",
+    author: "青崎有吾",
     genre: "ミステリー",
-    tone: "不穏 静か",
-    reason: "謎よりも、誰もいない場所の気配が残ります。",
+    tone: "知的 鋭い",
+    reason: "文庫化でも手に取りやすい、遊び心のある頭脳戦。",
     color: "#cbd4dc"
   },
   {
-    title: "透明な午後",
-    author: "李 夏遠",
-    genre: "エッセイ",
-    tone: "考える やさしい",
-    reason: "答えではなく、静かな視点が欲しい午後に。",
+    title: "777 トリプルセブン",
+    author: "伊坂幸太郎",
+    genre: "小説",
+    tone: "軽やか 不穏",
+    reason: "伊坂幸太郎の疾走感を、読書記録の外側から一冊。",
     color: "#dde3e6"
   },
   {
-    title: "冬の骨",
-    author: "深森 透",
+    title: "かたばみ",
+    author: "木内昇",
     genre: "小説",
-    tone: "鋭い 不穏",
-    reason: "短く鋭い文章と、説明されない空白を楽しむ一冊。",
+    tone: "家族 静か",
+    reason: "文庫化で手に取りやすい、時間の厚みが残る家族小説。",
     color: "#c5ced8"
   },
   {
-    title: "遠雷の図書室",
-    author: "高瀬 文",
-    genre: "小説",
+    title: "旅の短篇集 春夏",
+    author: "原田宗典",
+    genre: "短編集",
     tone: "遠く 静か",
-    reason: "派手な冒険ではなく、静かに遠くへ行きたい日に。",
+    reason: "2026年本屋大賞の超発掘本。少し前の本をいま読む余白。",
     color: "#d0d4df"
   },
   {
-    title: "眠りの手前で",
-    author: "有川 冬",
-    genre: "短編集",
-    tone: "やさしい 静か",
-    reason: "眠る前の短い時間に、記憶をほどく物語。",
+    title: "海霧 -ジリー",
+    author: "馳星周",
+    genre: "小説",
+    tone: "重い 遠く",
+    reason: "2026年6月刊行。荒さと静けさの両方が欲しいときに。",
     color: "#dadde4"
   }
 ];
@@ -102,75 +118,53 @@ const recommendationPool = [
 function isoDate(offset = 0) {
   const date = new Date();
   date.setDate(date.getDate() + offset);
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function seedState() {
-  const books = [
-    {
-      id: "book-1", title: "遠い部屋、近い声", author: "久住 澄",
-      genre: "小説", isbn: "9784000000001", status: "reading",
-      pages: 326, progress: 182, tone: "静か 読後に残る", color: "#cbd3de",
-      createdAt: "2026-05-29T10:00:00.000Z", updatedAt: "2026-06-13T14:18:00.000Z"
-    },
-    {
-      id: "book-2", title: "霧のなかの家", author: "小泉 冬子",
-      genre: "小説", isbn: "9784000000002", status: "read",
-      pages: 248, progress: 248, tone: "不穏 冷たい", color: "#d6dce2",
-      createdAt: "2026-05-18T09:00:00.000Z", updatedAt: "2026-06-08T11:00:00.000Z"
-    },
-    {
-      id: "book-3", title: "水面の手紙", author: "森野 灯",
-      genre: "短編集", isbn: "9784000000003", status: "read",
-      pages: 216, progress: 216, tone: "やさしい 静か", color: "#d4dce0",
-      createdAt: "2026-04-12T09:00:00.000Z", updatedAt: "2026-05-30T11:00:00.000Z"
-    },
-    {
-      id: "book-4", title: "夜をほどく", author: "成瀬 周",
-      genre: "エッセイ", isbn: "", status: "wishlist",
-      pages: 192, progress: 0, tone: "考える", color: "#d3d4df",
-      createdAt: "2026-06-03T09:00:00.000Z", updatedAt: "2026-06-03T09:00:00.000Z"
-    }
-  ];
-  const records = [
-    {
-      id: "record-1", bookId: "book-2", date: "2026-06-08", status: "read",
-      rating: 4, tone: "冷たい静けさ", note: "静かだけれど、最後の数ページだけ温度が違った。",
-      createdAt: "2026-06-08T14:18:00.000Z"
-    },
-    {
-      id: "record-2", bookId: "book-3", date: "2026-05-30", status: "read",
-      rating: 5, tone: "水のような余韻", note: "読み終えてから、窓の外の音が少し近くなった。",
-      createdAt: "2026-05-30T12:05:00.000Z"
-    }
-  ];
-  const reviews = [
-    {
-      id: "review-1", bookId: "book-3", name: "mio", rating: 5,
-      heading: "言葉の外側まで静かでした",
-      body: "大きな出来事はないのに、短い話の間にある余白まで記憶に残ります。急いで読まない方がいい本でした。",
-      spoiler: false, createdAt: "2026-06-01T08:12:00.000Z", updatedAt: "2026-06-01T08:12:00.000Z"
-    }
-  ];
   return {
-    version: 1,
-    books,
-    records,
-    reviews,
-    activity: [
-      { id: "activity-1", action: "review-created", label: "『水面の手紙』のレビューを投稿", createdAt: "2026-06-01T08:12:00.000Z" }
-    ]
+    version: 2,
+    books: [],
+    records: [],
+    reviews: [],
+    activity: []
   };
+}
+
+function migrateState(saved) {
+  const demoBookIds = new Set(["book-1", "book-2", "book-3", "book-4"]);
+  const demoRecordIds = new Set(["record-1", "record-2"]);
+  const demoReviewIds = new Set(["review-1"]);
+  const books = (saved.books || []).filter(book => !demoBookIds.has(book.id));
+  const records = (saved.records || []).filter(record => !demoRecordIds.has(record.id) && !demoBookIds.has(record.bookId));
+  const reviews = (saved.reviews || []).filter(review => !demoReviewIds.has(review.id) && !demoBookIds.has(review.bookId));
+  const activity = (saved.activity || []).filter(item => !/^activity-1$/.test(item.id));
+  return { ...saved, version: 2, books, records, reviews, activity };
 }
 
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && Array.isArray(saved.books) && Array.isArray(saved.reviews)) return saved;
+    if (saved && Array.isArray(saved.books) && Array.isArray(saved.reviews)) return migrateState(saved);
   } catch (error) {
     console.warn("保存データを読み込めませんでした。", error);
   }
   return seedState();
+}
+
+function loadAuthSession() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
+    const now = Math.floor(Date.now() / 1000);
+    if (saved?.access_token && saved?.expires_at && saved.expires_at > now) return saved;
+  } catch (error) {
+    console.warn("ログイン情報を読み込めませんでした。", error);
+  }
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  return null;
 }
 
 let state = loadState();
@@ -186,6 +180,223 @@ const $$ = selector => [...document.querySelectorAll(selector)];
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  queueRemoteSync();
+}
+
+function supabaseConfig() {
+  const config = window.YOHAKU_SUPABASE || {};
+  return {
+    enabled: Boolean(config.enabled),
+    url: String(config.url || "").replace(/\/$/, ""),
+    anonKey: config.anonKey || "",
+    ownerId: config.ownerId || "personal-library",
+    authRequired: config.authRequired !== false
+  };
+}
+
+function hasSupabaseConfig() {
+  const config = supabaseConfig();
+  return config.enabled && config.url && config.anonKey;
+}
+
+function sessionUserId() {
+  if (!authSession?.access_token) return "";
+  try {
+    const payload = JSON.parse(atob(authSession.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload.sub || authSession.user?.id || "";
+  } catch {
+    return authSession.user?.id || "";
+  }
+}
+
+function activeOwnerId(config = supabaseConfig()) {
+  return config.authRequired ? sessionUserId() : config.ownerId;
+}
+
+function syncHeaders(config, { allowAnon = false } = {}) {
+  const token = authSession?.access_token || (allowAnon ? config.anonKey : "");
+  return {
+    apikey: config.anonKey,
+    authorization: `Bearer ${token || config.anonKey}`,
+    "content-type": "application/json"
+  };
+}
+
+function setSyncStatus(message) {
+  const status = $("#sync-status");
+  if (status) status.textContent = message;
+}
+
+async function loadRemoteState() {
+  if (!hasSupabaseConfig()) {
+    setSyncStatus("DATA STAYS IN THIS BROWSER");
+    return null;
+  }
+  const config = supabaseConfig();
+  const ownerId = activeOwnerId(config);
+  if (config.authRequired && !ownerId) {
+    remoteSyncReady = false;
+    setSyncStatus("LOGIN TO SYNC DATABASE");
+    return null;
+  }
+  setSyncStatus("SYNCING WITH DATABASE");
+  try {
+    const endpoint = `${config.url}/rest/v1/yohaku_app_states?owner_id=eq.${encodeURIComponent(ownerId)}&select=state&limit=1`;
+    const response = await fetch(endpoint, { headers: syncHeaders(config) });
+    if (!response.ok) throw new Error(`Supabase read failed: ${response.status}`);
+    const rows = await response.json();
+    const remoteState = rows?.[0]?.state;
+    if (remoteState && Array.isArray(remoteState.books) && Array.isArray(remoteState.records) && Array.isArray(remoteState.reviews)) {
+      setSyncStatus("DATABASE SYNC ON");
+      return remoteState;
+    }
+    remoteSyncReady = true;
+    queueRemoteSync(80);
+    setSyncStatus("DATABASE READY");
+    return null;
+  } catch (error) {
+    console.warn("Supabaseから読み込めませんでした。ブラウザ内の保存を使います。", error);
+    setSyncStatus("DATABASE OFFLINE / LOCAL COPY");
+    return null;
+  }
+}
+
+async function persistStateRemote() {
+  if (!hasSupabaseConfig() || !remoteSyncReady) return;
+  const config = supabaseConfig();
+  const ownerId = activeOwnerId(config);
+  if (!ownerId) {
+    setSyncStatus("LOGIN TO SYNC DATABASE");
+    return;
+  }
+  try {
+    const endpoint = `${config.url}/rest/v1/yohaku_app_states?on_conflict=owner_id`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        ...syncHeaders(config),
+        prefer: "resolution=merge-duplicates"
+      },
+      body: JSON.stringify({
+        owner_id: ownerId,
+        state,
+        catalog_version: CATALOG_VERSION
+      })
+    });
+    if (!response.ok) throw new Error(`Supabase write failed: ${response.status}`);
+    setSyncStatus("DATABASE SYNC ON");
+  } catch (error) {
+    console.warn("Supabaseへ保存できませんでした。ブラウザ内には保存済みです。", error);
+    setSyncStatus("DATABASE OFFLINE / LOCAL COPY");
+  }
+}
+
+function queueRemoteSync(delay = 450) {
+  if (!hasSupabaseConfig() || !remoteSyncReady) return;
+  clearTimeout(remoteSyncTimer);
+  remoteSyncTimer = setTimeout(persistStateRemote, delay);
+}
+
+async function loadCatalogFromSupabase() {
+  if (!hasSupabaseConfig()) return false;
+  const config = supabaseConfig();
+  try {
+    const endpoint = `${config.url}/rest/v1/yohaku_books?select=*&order=id.asc`;
+    const response = await fetch(endpoint, { headers: syncHeaders(config, { allowAnon: true }) });
+    if (!response.ok) throw new Error(`Supabase catalog read failed: ${response.status}`);
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows.length) return false;
+    BOOK_CATALOG = rows.map(book => ({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      authorKana: book.author_kana || "",
+      category: book.category || "general-fiction",
+      publishedYear: book.published_year || "",
+      publisher: book.publisher || "",
+      tones: Array.isArray(book.tones) ? book.tones : []
+    }));
+    return true;
+  } catch (error) {
+    console.warn("Supabaseの本カタログを読み込めませんでした。同梱カタログを使います。", error);
+    return false;
+  }
+}
+
+function parseAuthCallback() {
+  if (!location.hash.includes("access_token=")) return;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  const expiresIn = Number(params.get("expires_in")) || 3600;
+  if (!accessToken) return;
+  authSession = {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_at: Math.floor(Date.now() / 1000) + expiresIn - 60
+  };
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
+  history.replaceState({ view: "home" }, "", "#home");
+  showToast("ログインしました。DB同期を開始します。");
+}
+
+async function requestMagicLink(event) {
+  event.preventDefault();
+  const config = supabaseConfig();
+  if (!hasSupabaseConfig()) {
+    showToast("SupabaseのURLとanon keyを設定してください。");
+    return;
+  }
+  const email = $("#auth-email").value.trim();
+  try {
+    const response = await fetch(`${config.url}/auth/v1/otp`, {
+      method: "POST",
+      headers: syncHeaders(config, { allowAnon: true }),
+      body: JSON.stringify({
+        email,
+        create_user: true,
+        options: {
+          email_redirect_to: `${location.origin}${location.pathname}#home`
+        }
+      })
+    });
+    if (!response.ok) throw new Error(`Auth request failed: ${response.status}`);
+    showToast("ログインリンクを送りました。メールを確認してください。");
+  } catch (error) {
+    console.warn("ログインリンクを送れませんでした。", error);
+    showToast("ログインリンクを送れませんでした。設定を確認してください。");
+  }
+}
+
+async function signOut() {
+  const config = supabaseConfig();
+  if (hasSupabaseConfig() && authSession?.access_token) {
+    fetch(`${config.url}/auth/v1/logout`, {
+      method: "POST",
+      headers: syncHeaders(config)
+    }).catch(error => console.warn("ログアウト通知に失敗しました。", error));
+  }
+  authSession = null;
+  remoteSyncReady = false;
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  setSyncStatus(hasSupabaseConfig() ? "LOGIN TO SYNC DATABASE" : "DATA STAYS IN THIS BROWSER");
+  updateAuthUi();
+  closeModal();
+  showToast("ログアウトしました。");
+}
+
+function updateAuthUi() {
+  const button = $("#auth-button");
+  const signout = $("#auth-signout");
+  if (!button) return;
+  if (!hasSupabaseConfig()) {
+    button.textContent = "同期設定";
+    if (signout) signout.hidden = true;
+    return;
+  }
+  const loggedIn = Boolean(activeOwnerId());
+  button.textContent = loggedIn ? "同期中" : "同期ログイン";
+  if (signout) signout.hidden = !loggedIn;
 }
 
 function uid(prefix) {
@@ -202,7 +413,15 @@ function escapeHtml(value = "") {
 }
 
 function normalize(value = "") {
-  return value.toLowerCase().replace(/[\s　\-ー・]/g, "");
+  return toHiragana(String(value).normalize("NFKC").toLowerCase())
+    .replace(/[ーｰ]/g, "")
+    .replace(/[^\p{Letter}\p{Number}]/gu, "");
+}
+
+function toHiragana(value = "") {
+  return value.replace(/[ァ-ン]/g, char =>
+    String.fromCharCode(char.charCodeAt(0) - 0x60)
+  );
 }
 
 function formatDate(value, includeTime = false) {
@@ -223,6 +442,105 @@ function bookById(id) {
   return state.books.find(book => book.id === id);
 }
 
+function catalogById(id) {
+  return BOOK_CATALOG.find(book => book.id === id);
+}
+
+function enrichBookFromCatalog(book) {
+  const catalog = book.catalogId ? catalogById(book.catalogId) : null;
+  return catalog ? { ...catalog, ...book } : book;
+}
+
+function searchableText(book) {
+  return normalize([
+    book.title,
+    book.author,
+    book.authorKana,
+    book.isbn,
+    book.isbn13,
+    book.publisher,
+    book.category,
+    ...(book.tones || [])
+  ].filter(Boolean).join(" "));
+}
+
+function catalogIdentity(book) {
+  return normalize(`${book.title || ""}${book.author || ""}`) || normalize(book.id || "");
+}
+
+function editDistance(a, b) {
+  if (!a || !b) return Math.max(a.length, b.length);
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+  return previous[b.length];
+}
+
+function fuzzyFieldScore(query, value, weight) {
+  const normalizedValue = normalize(value);
+  if (!query || !normalizedValue) return 0;
+  if (normalizedValue === query) return weight;
+  if (normalizedValue.startsWith(query)) return Math.round(weight * 0.82);
+  if (normalizedValue.includes(query)) return Math.round(weight * 0.66);
+  if (query.includes(normalizedValue) && normalizedValue.length >= 2) return Math.round(weight * 0.5);
+  const distance = editDistance(query, normalizedValue);
+  const ratio = 1 - distance / Math.max(query.length, normalizedValue.length);
+  return ratio >= 0.58 ? Math.round(weight * ratio * 0.56) : 0;
+}
+
+function fuzzyTitleAuthorScore(query, book) {
+  const normalizedQuery = normalize(query);
+  const title = normalize(book.title);
+  const author = normalize(book.author);
+  const authorKana = normalize(book.authorKana);
+  const combined = normalize(`${book.title || ""}${book.author || ""}`);
+  let score = fuzzyFieldScore(normalizedQuery, title, 160)
+    + fuzzyFieldScore(normalizedQuery, author, 128)
+    + fuzzyFieldScore(normalizedQuery, authorKana, 118)
+    + fuzzyFieldScore(normalizedQuery, combined, 72);
+  String(query).trim().split(/\s+/).map(normalize).filter(Boolean).forEach(term => {
+    score += fuzzyFieldScore(term, title, 76);
+    score += fuzzyFieldScore(term, author, 64);
+    score += fuzzyFieldScore(term, authorKana, 56);
+  });
+  return score;
+}
+
+function searchBooks(query, { limit = 8, includeUserBooks = true } = {}) {
+  const normalizedQuery = normalize(query);
+  if (!normalizedQuery) return [];
+  const terms = String(query).trim().split(/\s+/).map(normalize).filter(Boolean);
+  const sources = [
+    ...BOOK_CATALOG.map(book => ({ ...book, source: "catalog" })),
+    ...(includeUserBooks ? state.books.map(book => ({ ...enrichBookFromCatalog(book), source: "library" })) : [])
+  ];
+  const unique = new Map();
+  sources.forEach(book => {
+    const key = book.catalogId || catalogIdentity(book);
+    if (!unique.has(key) || book.source === "library") unique.set(key, book);
+  });
+  return [...unique.values()]
+    .map(book => {
+      const haystack = searchableText(book);
+      let score = fuzzyTitleAuthorScore(query, book);
+      if (book.isbn && normalize(book.isbn) === normalizedQuery) score += 90;
+      if (book.isbn13 && normalize(book.isbn13) === normalizedQuery) score += 90;
+      if (terms.length > 1 && terms.every(term => haystack.includes(term))) score += 44;
+      if (score === 0 && haystack.includes(normalizedQuery)) score += 22;
+      return { ...book, score };
+    })
+    .filter(book => normalizedQuery.length <= 1 ? book.score > 0 : book.score >= 40)
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, "ja"))
+    .slice(0, limit);
+}
+
 function addActivity(action, label) {
   state.activity.unshift({ id: uid("activity"), action, label, createdAt: new Date().toISOString() });
   state.activity = state.activity.slice(0, 60);
@@ -236,11 +554,25 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
-function openView(viewName) {
-  $$(".app-view").forEach(view => view.classList.toggle("active", view.id === `view-${viewName}`));
-  $$(".site-header .nav-link").forEach(button => button.classList.toggle("active", button.dataset.view === viewName));
+function openView(viewName, { replace = false } = {}) {
+  const validView = ["home", "library", "journal", "reviews"].includes(viewName) ? viewName : "home";
+  const nextHash = `#${validView}`;
+  $$(".app-view").forEach(view => view.classList.toggle("active", view.id === `view-${validView}`));
+  $$(".site-header .nav-link").forEach(button => button.classList.toggle("active", button.dataset.view === validView));
+  if (activeView !== validView) window.scrollTo({ top: 0, behavior: "smooth" });
+  activeView = validView;
+  if (location.hash !== nextHash || replace) {
+    const method = replace ? "replaceState" : "pushState";
+    history[method]({ view: validView }, "", nextHash);
+  }
+}
+
+function showViewFromHistory(viewName) {
+  const validView = ["home", "library", "journal", "reviews"].includes(viewName) ? viewName : "home";
+  $$(".app-view").forEach(view => view.classList.toggle("active", view.id === `view-${validView}`));
+  $$(".site-header .nav-link").forEach(button => button.classList.toggle("active", button.dataset.view === validView));
+  activeView = validView;
   window.scrollTo({ top: 0, behavior: "smooth" });
-  history.replaceState(null, "", `#${viewName}`);
 }
 
 function openModal(id) {
@@ -262,43 +594,32 @@ function closeModal() {
 
 function bookOptions(selected = "") {
   return state.books
-    .map(book => `<option value="${book.id}" ${book.id === selected ? "selected" : ""}>${escapeHtml(book.title)} — ${escapeHtml(book.author)}</option>`)
+    .map(book => {
+      const enriched = enrichBookFromCatalog(book);
+      return `<option value="${book.id}" ${book.id === selected ? "selected" : ""}>${escapeHtml(enriched.title)} — ${escapeHtml(enriched.author)}</option>`;
+    })
     .join("");
 }
 
 function renderHome() {
-  const readCount = state.books.filter(book => book.status === "read").length;
-  $("#hero-read-count").textContent = readCount;
-
-  const reading = state.books.find(book => book.status === "reading");
-  $("#reading-now-content").innerHTML = reading ? `
-    <div class="reading-book">
-      <div class="mini-spine"></div>
-      <div>
-        <h2>${escapeHtml(reading.title)}</h2>
-        <span>${reading.progress || 0} / ${reading.pages || "—"}ページ</span>
-        <div class="progress-track"><i style="width:${reading.pages ? Math.min(100, (reading.progress / reading.pages) * 100) : 0}%"></i></div>
-      </div>
-      <em>${reading.pages ? Math.round((reading.progress / reading.pages) * 100) : 0}%</em>
-    </div>
-  ` : `
-    <div class="empty-copy">
-      <h2>今は、栞を挟んだ本がありません。</h2>
-      <p>読書中の本を登録すると進み具合が見えます。</p>
-      <button class="text-button" data-action="add-book">本を登録する</button>
-    </div>
-  `;
+  const recordCount = state.records.length;
+  $("#hero-read-count").textContent = recordCount;
+  $("#hero-record-label").textContent = "件の記録が、ここに残っています";
 
   const latestRecord = [...state.records].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
   const latestBook = latestRecord && bookById(latestRecord.bookId);
+  const latestEnriched = latestBook ? enrichBookFromCatalog(latestBook) : null;
   $("#last-note-content").innerHTML = latestRecord ? `
-    <blockquote>「${escapeHtml(latestRecord.note || latestRecord.tone || "記録を残しました。")}」</blockquote>
-    <small>『${escapeHtml(latestBook?.title || "削除された本")}』 / ${formatDate(latestRecord.date)}</small>
+    <h2>『${escapeHtml(latestEnriched?.title || "削除された本")}』</h2>
+    <p>${escapeHtml(latestEnriched?.author || "")}</p>
+    <small>${formatDate(latestRecord.date)} / ${STATUS_LABELS[latestRecord.status] || "記録"}</small>
+    <button class="text-button" data-action="view-journal">これまでの記録を見る</button>
   ` : `
-    <div class="empty-copy"><h2>最初の余韻を残す。</h2><p>短い一言から始められます。</p></div>
+    <div class="empty-copy"><h2>まだ記録はありません。</h2><p>読み終えた本を一冊入れると、ここに最近の記録が出ます。</p></div>
   `;
 
   renderRecommendations();
+  renderCatalogResults($("#catalog-search")?.value || "");
   $("#new-book-list").innerHTML = newBooks.map((book, index) => {
     const owned = findDuplicate(book.title);
     return `
@@ -310,6 +631,26 @@ function renderHome() {
       </article>
     `;
   }).join("");
+}
+
+function renderCatalogResults(query = "") {
+  const results = query ? searchBooks(query, { limit: 10 }) : BOOK_CATALOG.slice(0, 8);
+  $("#catalog-results").innerHTML = results.length ? results.map(book => {
+    const isLibraryResult = book.source === "library";
+    const owned = isLibraryResult ? bookById(book.id) : findDuplicateByTitleAuthor(book.title, book.author);
+    return `
+      <article class="catalog-item">
+        <div>
+          <h3>${escapeHtml(book.title)}</h3>
+          <span>${escapeHtml(book.author)} / ${escapeHtml(CATEGORY_LABELS[book.category] || book.category || "小説")}${book.publishedYear ? ` / ${book.publishedYear}` : ""}</span>
+        </div>
+        <div class="catalog-actions">
+          <button data-action="${isLibraryResult ? "record-library" : "record-catalog"}" data-id="${book.id}">記録をつける</button>
+          <button data-action="${isLibraryResult ? "open-library" : "save-catalog"}" data-id="${book.id}" ${owned ? "aria-label=\"本棚にある本を開く\"" : ""}>${owned ? `${STATUS_LABELS[owned.status]} ✓` : "読みたい本へ"}</button>
+        </div>
+      </article>
+    `;
+  }).join("") : `<div class="empty-state compact-empty"><h2>近い本は見つかりませんでした。</h2><p>タイトルと作者を少し短くして探してください。</p></div>`;
 }
 
 function renderRecommendations() {
@@ -336,15 +677,59 @@ function findDuplicate(query, excludeId = "") {
   if (!target) return null;
   return state.books.find(book => {
     if (book.id === excludeId) return false;
-    return normalize(book.title) === target || (book.isbn && normalize(book.isbn) === target);
+    const enriched = enrichBookFromCatalog(book);
+    return normalize(enriched.title) === target
+      || normalize(`${enriched.title}${enriched.author}`).includes(target)
+      || (enriched.isbn && normalize(enriched.isbn) === target)
+      || (enriched.isbn13 && normalize(enriched.isbn13) === target);
   }) || null;
+}
+
+function findDuplicateByTitleAuthor(title, author = "", excludeId = "") {
+  const normalizedTitle = normalize(title);
+  const normalizedAuthor = normalize(author);
+  const exact = state.books.find(book => {
+    if (book.id === excludeId) return false;
+    const enriched = enrichBookFromCatalog(book);
+    return normalize(enriched.title) === normalizedTitle
+      && (!normalizedAuthor || normalize(enriched.author) === normalizedAuthor);
+  });
+  if (exact) return exact;
+  const candidates = state.books
+    .filter(book => book.id !== excludeId)
+    .map(book => ({ book, score: fuzzyTitleAuthorScore(`${title} ${author}`.trim(), enrichBookFromCatalog(book)) }))
+    .sort((a, b) => b.score - a.score);
+  return candidates[0]?.score >= 118 ? candidates[0].book : findDuplicate(title, excludeId);
+}
+
+function findBestLibraryMatch(query, excludeId = "") {
+  const normalizedQuery = normalize(query);
+  if (!normalizedQuery) return null;
+  const direct = state.books.find(book => {
+    if (book.id === excludeId) return false;
+    const enriched = enrichBookFromCatalog(book);
+    return searchableText(enriched).includes(normalizedQuery);
+  });
+  if (direct) return direct;
+  const candidates = state.books
+    .filter(book => book.id !== excludeId)
+    .map(book => {
+      const enriched = enrichBookFromCatalog(book);
+      return {
+        book,
+        score: fuzzyTitleAuthorScore(query, enriched)
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  return candidates[0]?.score >= 92 ? candidates[0].book : null;
 }
 
 function renderLibrary() {
   const query = normalize($("#library-search")?.value);
   const filtered = state.books.filter(book => {
+    const enriched = enrichBookFromCatalog(book);
     const matchesFilter = currentFilter === "all" || book.status === currentFilter;
-    const haystack = normalize(`${book.title}${book.author}${book.isbn}${book.genre}`);
+    const haystack = searchableText(enriched);
     return matchesFilter && (!query || haystack.includes(query));
   });
   const counts = Object.fromEntries(Object.keys(STATUS_LABELS).map(status => [status, state.books.filter(book => book.status === status).length]));
@@ -354,17 +739,30 @@ function renderLibrary() {
     <span><b>${counts.reading}</b>読書中</span>
     <span><b>${counts.wishlist}</b>読みたい</span>
   `;
-  $("#library-list").innerHTML = filtered.map(book => `
-    <button class="shelf-card" data-action="edit-book" data-id="${book.id}">
+  $("#library-list").innerHTML = filtered.map(book => {
+    const enriched = enrichBookFromCatalog(book);
+    const primaryAction = book.status === "wishlist"
+      ? "所有にする"
+      : book.status === "read"
+        ? "再読を記録"
+        : "読了を記録";
+    return `
+    <article class="shelf-card">
       <div class="shelf-cover" style="--cover:${book.color || COLORS[0]}">
         <span class="status-tag">${STATUS_LABELS[book.status]}</span>
-        <strong>${escapeHtml(book.title)}</strong>
+        <strong>${escapeHtml(enriched.title)}</strong>
       </div>
-      <h2>${escapeHtml(book.title)}</h2>
-      <p>${escapeHtml(book.author)} / ${escapeHtml(book.genre)}</p>
-      <small>${book.isbn ? `ISBN ${escapeHtml(book.isbn)}` : escapeHtml(book.tone || "気配はまだ未記録")}</small>
-    </button>
-  `).join("");
+      <h2>${escapeHtml(enriched.title)}</h2>
+      <p>${escapeHtml(enriched.author)} / ${escapeHtml(CATEGORY_LABELS[enriched.category] || enriched.genre || "小説")}</p>
+      <small>${enriched.isbn13 || enriched.isbn ? `ISBN ${escapeHtml(enriched.isbn13 || enriched.isbn)}` : escapeHtml(book.tone || "メモはまだありません")}</small>
+      <div class="shelf-actions">
+        <button data-action="quick-status" data-id="${book.id}">${primaryAction}</button>
+        ${book.status !== "wishlist" ? `<button data-action="mark-wishlist" data-id="${book.id}">読みたいへ戻す</button>` : ""}
+        <button data-action="edit-book" data-id="${book.id}">情報を編集</button>
+      </div>
+    </article>
+  `;
+  }).join("");
   $("#library-empty").hidden = filtered.length > 0;
 }
 
@@ -381,14 +779,19 @@ function renderJournal() {
   `;
   $("#journal-timeline").innerHTML = records.length ? records.map(record => {
     const book = bookById(record.bookId);
+    const enriched = book ? enrichBookFromCatalog(book) : null;
     return `
       <article class="timeline-item">
         <time class="timeline-date">${formatDate(record.date)}</time>
         <div class="timeline-copy">
-          <h3>${escapeHtml(book?.title || "削除された本")}</h3>
-          <span>${escapeHtml(book?.author || "")} / ${STATUS_LABELS[record.status] || "記録"}</span>
+          <h3>${escapeHtml(enriched?.title || "削除された本")}</h3>
+          <span>${escapeHtml(enriched?.author || "")} / ${STATUS_LABELS[record.status] || "記録"}</span>
           ${record.note ? `<blockquote>「${escapeHtml(record.note)}」</blockquote>` : ""}
           <div class="stars">${stars(record.rating)}　${escapeHtml(record.tone || "")}</div>
+          <div class="timeline-actions">
+            <button class="text-button" data-action="edit-record" data-id="${record.id}">記録を編集</button>
+            <button class="text-button danger-link" data-action="delete-record" data-id="${record.id}">削除</button>
+          </div>
         </div>
       </article>
     `;
@@ -410,6 +813,7 @@ function renderReviews() {
   $("#review-count").textContent = `${reviews.length}件のレビュー`;
   $("#review-list").innerHTML = reviews.length ? reviews.map(review => {
     const book = bookById(review.bookId);
+    const enriched = book ? enrichBookFromCatalog(book) : null;
     const content = `
       <h3>${escapeHtml(review.heading)}</h3>
       <p>${escapeHtml(review.body)}</p>
@@ -418,8 +822,8 @@ function renderReviews() {
       <article class="review-item">
         <div class="review-top">
           <div class="review-book">
-            <h2>${escapeHtml(book?.title || "削除された本")}</h2>
-            <span>${escapeHtml(book?.author || "")}</span>
+            <h2>${escapeHtml(enriched?.title || "削除された本")}</h2>
+            <span>${escapeHtml(enriched?.author || "")}</span>
           </div>
           <div class="stars">${stars(review.rating)}</div>
         </div>
@@ -479,8 +883,9 @@ function saveBook(event) {
   event.preventDefault();
   const id = $("#book-id").value;
   const title = $("#book-title").value.trim();
+  const author = $("#book-author").value.trim();
   const isbn = $("#book-isbn").value.trim();
-  const duplicate = findDuplicate(isbn || title, id);
+  const duplicate = isbn ? findDuplicate(isbn, id) : findDuplicateByTitleAuthor(title, author, id);
   if (duplicate) {
     const warning = $("#book-duplicate-warning");
     warning.textContent = `『${duplicate.title}』はすでに「${STATUS_LABELS[duplicate.status]}」として本棚にあります。`;
@@ -491,7 +896,7 @@ function saveBook(event) {
   const book = {
     id: id || uid("book"),
     title,
-    author: $("#book-author").value.trim(),
+    author,
     genre: $("#book-genre").value,
     isbn,
     status: $("#book-status").value,
@@ -515,6 +920,55 @@ function saveBook(event) {
   showToast(existing ? "本の情報を更新しました。" : "本棚に一冊追加しました。");
 }
 
+function addBookFromCatalog(catalogBook, status = "wishlist") {
+  const duplicate = findDuplicateByTitleAuthor(catalogBook.title, catalogBook.author);
+  if (duplicate) return duplicate;
+  const book = {
+    id: uid("book"),
+    catalogId: catalogBook.id,
+    title: catalogBook.title,
+    author: catalogBook.author,
+    genre: "小説",
+    isbn: catalogBook.isbn13 || "",
+    status,
+    pages: 0,
+    progress: 0,
+    tone: "",
+    color: COLORS[state.books.length % COLORS.length],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  state.books.unshift(book);
+  addActivity("book-created", `『${book.title}』を本棚に追加`);
+  return book;
+}
+
+function findOrCreateBookFromRecord({ title, author, catalogId, status }) {
+  const selectedBook = bookById($("#record-book-id").value);
+  if (selectedBook) return selectedBook;
+  const catalogBook = catalogId ? catalogById(catalogId) : null;
+  const duplicate = findDuplicateByTitleAuthor(catalogBook?.title || title, catalogBook?.author || author);
+  if (duplicate) return duplicate;
+  if (catalogBook) return addBookFromCatalog(catalogBook, status);
+  const book = {
+    id: uid("book"),
+    title,
+    author,
+    genre: "小説",
+    isbn: "",
+    status,
+    pages: 0,
+    progress: 0,
+    tone: "",
+    color: COLORS[state.books.length % COLORS.length],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  state.books.unshift(book);
+  addActivity("book-created", `『${book.title}』を本棚に追加`);
+  return book;
+}
+
 function deleteCurrentBook() {
   const id = $("#book-id").value;
   const book = bookById(id);
@@ -528,42 +982,97 @@ function deleteCurrentBook() {
   showToast("本棚から削除しました。記録の履歴は残っています。");
 }
 
-function prepareRecordForm(bookId = "") {
-  if (!state.books.length) {
-    showToast("先に本を一冊登録してください。");
-    prepareBookForm();
-    return;
-  }
+function prepareRecordForm(bookId = "", record = null) {
   $("#record-form").reset();
-  $("#record-book").innerHTML = bookOptions(bookId);
-  $("#record-date").value = isoDate();
+  const book = record ? bookById(record.bookId) : bookById(bookId);
+  const enriched = book ? enrichBookFromCatalog(book) : null;
+  $("#record-id").value = record?.id || "";
+  $("#record-book-id").value = book?.id || "";
+  $("#record-catalog-id").value = book?.catalogId || "";
+  $("#record-title").value = enriched?.title || "";
+  $("#record-author").value = enriched?.author || "";
+  $("#record-date").value = record?.date || isoDate();
+  $("#record-status").value = record?.status || "read";
+  $("#record-rating").value = record?.rating || "4";
+  $("#record-tone").value = record?.tone || "";
+  $("#record-note").value = record?.note || "";
+  $("#record-modal-title").textContent = record ? "読書記録を編集する" : "読書の記録を残す";
+  $("#delete-record").hidden = !record;
+  renderRecordSuggestions();
   openModal("record-modal");
+}
+
+function prepareRecordFromCatalog(catalogBook) {
+  prepareRecordForm();
+  $("#record-catalog-id").value = catalogBook.id;
+  $("#record-title").value = catalogBook.title;
+  $("#record-author").value = catalogBook.author;
+  renderRecordSuggestions();
 }
 
 function saveRecord(event) {
   event.preventDefault();
-  const book = bookById($("#record-book").value);
-  if (!book) return;
+  const title = $("#record-title").value.trim();
+  const author = $("#record-author").value.trim();
   const status = $("#record-status").value;
+  const existingRecordId = $("#record-id").value;
+  const book = findOrCreateBookFromRecord({
+    title,
+    author,
+    catalogId: $("#record-catalog-id").value,
+    status
+  });
   const record = {
-    id: uid("record"),
+    id: existingRecordId || uid("record"),
     bookId: book.id,
     date: $("#record-date").value,
     status,
     rating: Number($("#record-rating").value),
     tone: $("#record-tone").value.trim(),
     note: $("#record-note").value.trim(),
-    createdAt: new Date().toISOString()
+    createdAt: state.records.find(item => item.id === existingRecordId)?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
-  state.records.unshift(record);
+  if (existingRecordId) {
+    state.records[state.records.findIndex(item => item.id === existingRecordId)] = record;
+  } else {
+    state.records.unshift(record);
+  }
   book.status = status;
+  if (!book.author && author) book.author = author;
   if (status === "read" && book.pages) book.progress = book.pages;
   book.updatedAt = new Date().toISOString();
-  addActivity("record-created", `『${book.title}』の読書記録を保存`);
+  addActivity(existingRecordId ? "record-updated" : "record-created", `『${book.title}』の読書記録を保存`);
   saveState();
   closeModal();
   renderAll();
-  showToast("読書の余韻を保存しました。");
+  showToast(existingRecordId ? "読書記録を更新しました。" : "読書記録を保存しました。");
+}
+
+function deleteRecord(id = $("#record-id").value) {
+  const record = state.records.find(item => item.id === id);
+  if (!record) return;
+  const book = bookById(record.bookId);
+  const enriched = book ? enrichBookFromCatalog(book) : null;
+  const label = enriched?.title ? `『${enriched.title}』の記録` : "この記録";
+  if (!window.confirm(`${label}を削除しますか？ 本棚に登録した本そのものは残ります。`)) return;
+  state.records = state.records.filter(item => item.id !== id);
+  addActivity("record-deleted", `${label}を削除`);
+  saveState();
+  closeModal();
+  renderAll();
+  showToast("読書記録を削除しました。");
+}
+
+function renderRecordSuggestions() {
+  const query = `${$("#record-title").value} ${$("#record-author").value}`.trim();
+  const results = query ? searchBooks(query, { limit: 5 }) : BOOK_CATALOG.slice(0, 4);
+  $("#record-suggestions").innerHTML = results.map(book => `
+    <button type="button" data-action="pick-record-book" data-id="${book.id}" data-source="${book.source || "catalog"}">
+      <strong>${escapeHtml(book.title)}</strong>
+      <span>${escapeHtml(book.author)}${book.publishedYear ? ` / ${book.publishedYear}` : ""}</span>
+    </button>
+  `).join("");
 }
 
 function prepareReviewForm(review = null, bookId = "") {
@@ -627,7 +1136,7 @@ function deleteReview(id) {
 }
 
 function saveSuggestedBook(book) {
-  const duplicate = findDuplicate(book.title);
+  const duplicate = findDuplicateByTitleAuthor(book.title, book.author);
   if (duplicate) {
     showToast(`『${duplicate.title}』はすでに本棚にあります。`);
     openView("library");
@@ -635,10 +1144,11 @@ function saveSuggestedBook(book) {
   }
   state.books.unshift({
     id: uid("book"),
+    catalogId: BOOK_CATALOG.some(item => item.id === book.id) ? book.id : "",
     title: book.title,
     author: book.author,
-    genre: book.genre,
-    isbn: "",
+    genre: book.genre || "小説",
+    isbn: book.isbn13 || "",
     status: "wishlist",
     pages: 0,
     progress: 0,
@@ -651,6 +1161,23 @@ function saveSuggestedBook(book) {
   saveState();
   renderAll();
   showToast("「読みたい本」に追加しました。");
+}
+
+function updateBookStatus(id, status) {
+  const book = bookById(id);
+  if (!book) return;
+  book.status = status;
+  if (status === "read" && book.pages) book.progress = book.pages;
+  book.updatedAt = new Date().toISOString();
+  addActivity("book-status-updated", `『${book.title}』を「${STATUS_LABELS[status]}」に変更`);
+  saveState();
+  renderAll();
+  showToast(`『${book.title}』を「${STATUS_LABELS[status]}」にしました。`);
+}
+
+function openExistingBook(book) {
+  openView("library");
+  showToast(`『${book.title}』は「${STATUS_LABELS[book.status]}」にあります。`);
 }
 
 function prepareFortune() {
@@ -676,9 +1203,23 @@ function selectMood(mood) {
 }
 
 function chooseFortuneBook(mood) {
-  const candidates = [...recommendationPool, ...newBooks].filter(book => book.tone.includes(mood));
-  const alternatives = candidates.filter(book => book.title !== currentFortuneBook?.title);
-  const pool = alternatives.length ? alternatives : candidates;
+  const excludeOwned = $("#fortune-exclude-owned")?.checked;
+  const catalogCandidates = BOOK_CATALOG
+    .filter(book => !book.tones?.length || book.tones.includes(mood))
+    .map(book => ({
+      ...book,
+      genre: CATEGORY_LABELS[book.category] || "小説",
+      reason: `${book.author}の作品。読んだあとすぐ記録をつけられます。`,
+      color: COLORS[Math.abs(book.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % COLORS.length]
+    }));
+  const candidates = [...catalogCandidates, ...recommendationPool, ...newBooks]
+    .filter(book => !book.tone || book.tone.includes(mood));
+  const visibleCandidates = excludeOwned
+    ? candidates.filter(book => !findDuplicate(book.title))
+    : candidates;
+  const source = visibleCandidates.length ? visibleCandidates : candidates;
+  const alternatives = source.filter(book => book.title !== currentFortuneBook?.title);
+  const pool = alternatives.length ? alternatives : source;
   return pool[Math.floor(Math.random() * pool.length)] || recommendationPool[0];
 }
 
@@ -717,9 +1258,51 @@ function handleAction(target) {
   if (!actionTarget) return;
   const { action, id, index } = actionTarget.dataset;
   if (action === "add-book") prepareBookForm();
+  if (action === "record-new") prepareRecordForm();
+  if (action === "view-journal") openView("journal");
   if (action === "edit-book") prepareBookForm(bookById(id));
+  if (action === "quick-status") {
+    const book = bookById(id);
+    if (book?.status === "wishlist") updateBookStatus(id, "owned");
+    else if (book) prepareRecordForm(id);
+  }
+  if (action === "mark-wishlist") updateBookStatus(id, "wishlist");
   if (action === "save-new") saveSuggestedBook(newBooks[Number(index)]);
   if (action === "recommendation") saveSuggestedBook(recommendationPool[Number(index)]);
+  if (action === "record-catalog") {
+    const book = catalogById(id);
+    if (book) prepareRecordFromCatalog(book);
+  }
+  if (action === "record-library") prepareRecordForm(id);
+  if (action === "open-library") {
+    const book = bookById(id);
+    if (book) openExistingBook(book);
+  }
+  if (action === "save-catalog") {
+    const book = catalogById(id);
+    if (book) {
+      const duplicate = findDuplicateByTitleAuthor(book.title, book.author);
+      if (duplicate) openExistingBook(duplicate);
+      else saveSuggestedBook(book);
+      renderCatalogResults($("#catalog-search").value);
+    }
+  }
+  if (action === "pick-record-book") {
+    const book = actionTarget.dataset.source === "library" ? bookById(id) : catalogById(id);
+    if (book) {
+      const enriched = enrichBookFromCatalog(book);
+      $("#record-book-id").value = actionTarget.dataset.source === "library" ? book.id : "";
+      $("#record-catalog-id").value = actionTarget.dataset.source === "catalog" ? book.id : (book.catalogId || "");
+      $("#record-title").value = enriched.title || "";
+      $("#record-author").value = enriched.author || "";
+      renderRecordSuggestions();
+    }
+  }
+  if (action === "edit-record") {
+    const record = state.records.find(item => item.id === id);
+    if (record) prepareRecordForm(record.bookId, record);
+  }
+  if (action === "delete-record") deleteRecord(id);
   if (action === "edit-review") prepareReviewForm(state.reviews.find(review => review.id === id));
   if (action === "delete-review") deleteReview(id);
   if (action === "show-spoiler") {
@@ -742,6 +1325,10 @@ $("#hero-add-record").addEventListener("click", () => prepareRecordForm());
 $("#journal-add-record").addEventListener("click", () => prepareRecordForm());
 $("#open-review").addEventListener("click", () => prepareReviewForm());
 $("#open-mood").addEventListener("click", prepareFortune);
+$("#auth-button").addEventListener("click", () => {
+  updateAuthUi();
+  openModal("auth-modal");
+});
 $$("[data-close-modal]").forEach(button => button.addEventListener("click", closeModal));
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" && $("#modal-layer").classList.contains("open")) closeModal();
@@ -751,10 +1338,22 @@ document.addEventListener("click", event => handleAction(event.target));
 $("#book-form").addEventListener("submit", saveBook);
 $("#record-form").addEventListener("submit", saveRecord);
 $("#review-form").addEventListener("submit", saveReview);
+$("#auth-form").addEventListener("submit", requestMagicLink);
+$("#auth-signout").addEventListener("click", signOut);
 $("#delete-book").addEventListener("click", deleteCurrentBook);
+$("#delete-record").addEventListener("click", () => deleteRecord());
 $("#book-status").addEventListener("change", updateProgressField);
 $("#review-sort").addEventListener("change", renderReviews);
 $("#library-search").addEventListener("input", renderLibrary);
+$("#catalog-search").addEventListener("input", event => renderCatalogResults(event.target.value));
+$("#record-title").addEventListener("input", () => {
+  $("#record-catalog-id").value = "";
+  renderRecordSuggestions();
+});
+$("#record-author").addEventListener("input", () => {
+  $("#record-catalog-id").value = "";
+  renderRecordSuggestions();
+});
 $("#library-filters").addEventListener("click", event => {
   const button = event.target.closest("[data-filter]");
   if (!button) return;
@@ -769,15 +1368,12 @@ $("#refresh-recommendations").addEventListener("click", () => {
 $("#duplicate-form").addEventListener("submit", event => {
   event.preventDefault();
   const query = $("#duplicate-query").value.trim();
-  const match = state.books.find(book => {
-    const target = normalize(query);
-    return normalize(book.title).includes(target) || (book.isbn && normalize(book.isbn) === target);
-  });
+  const match = findBestLibraryMatch(query);
   const result = $("#duplicate-result");
   result.classList.toggle("found", Boolean(match));
   result.innerHTML = match
-    ? `本棚にあります：『${escapeHtml(match.title)}』 / ${STATUS_LABELS[match.status]}`
-    : "同じ本は見つかりませんでした。購入候補に追加できます。";
+    ? `本棚にあります：『${escapeHtml(enrichBookFromCatalog(match).title)}』 / ${STATUS_LABELS[match.status]}`
+    : "本棚には見つかりませんでした。読みたい本として登録できます。";
 });
 $("#mood-options").addEventListener("click", event => {
   const button = event.target.closest("[data-mood]");
@@ -791,9 +1387,65 @@ $("#back-to-moods").addEventListener("click", () => {
   $("#draw-select-step").classList.add("active");
   currentFortuneBook = null;
 });
+window.addEventListener("popstate", () => {
+  if ($("#modal-layer").classList.contains("open")) {
+    closeModal();
+    return;
+  }
+  const view = ["home", "library", "journal", "reviews"].includes(location.hash.slice(1))
+    ? location.hash.slice(1)
+    : "home";
+  showViewFromHistory(view);
+});
 
 const initialView = ["home", "library", "journal", "reviews"].includes(location.hash.slice(1))
   ? location.hash.slice(1)
   : "home";
-renderAll();
-openView(initialView);
+
+async function loadCatalog() {
+  if (Array.isArray(window.YOHAKU_BOOK_CATALOG)) {
+    BOOK_CATALOG = window.YOHAKU_BOOK_CATALOG;
+  }
+  if (!window.fetch) return;
+  try {
+    let sources = [{ path: LOCAL_CATALOG_FALLBACK }];
+    const indexResponse = await fetch(LOCAL_CATALOG_INDEX);
+    if (indexResponse.ok) {
+      const index = await indexResponse.json();
+      if (Array.isArray(index) && index.length) sources = index;
+    }
+    const catalogs = await Promise.all(sources.map(async source => {
+      const response = await fetch(source.path);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${source.path}`);
+      const catalog = await response.json();
+      return Array.isArray(catalog) ? catalog : [];
+    }));
+    const merged = catalogs.flat();
+    if (merged.length) {
+      const unique = new Map();
+      merged.forEach(book => unique.set(book.id || catalogIdentity(book), book));
+      BOOK_CATALOG = [...unique.values()];
+    }
+  } catch (error) {
+    console.info("JSONカタログを読み込めなかったため、内蔵カタログを使います。", error);
+  }
+  await loadCatalogFromSupabase();
+}
+
+async function initApp() {
+  parseAuthCallback();
+  await loadCatalog();
+  const remoteState = await loadRemoteState();
+  if (remoteState) {
+    state = migrateState(remoteState);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    remoteSyncReady = true;
+  } else {
+    remoteSyncReady = hasSupabaseConfig() && Boolean(activeOwnerId());
+  }
+  updateAuthUi();
+  renderAll();
+  openView(initialView, { replace: true });
+}
+
+initApp();

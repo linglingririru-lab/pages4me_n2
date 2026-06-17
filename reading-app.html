@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260617-3" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260617-5" />
   </head>
   <body>
     <header class="site-header">
@@ -109,13 +109,13 @@
         <section class="catalog-section" id="catalog-search-section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">BOOK CATALOG / JAPANESE FICTION</p>
-              <h2>本を検索する</h2>
-              <p class="section-lead">読んだ本なら記録へ。まだなら、読みたい本へ。</p>
+              <p class="eyebrow">BOOKS FOR JUNE</p>
+              <h2 id="catalog-section-title">6月にひらく棚</h2>
+              <p class="section-lead">現代小説、文豪、海外文学から、今月の八冊。</p>
             </div>
-            <p class="section-note">タイトルと作者を優先して、同じ本や近い表記を探します。</p>
+            <p class="section-note">気になる本は、読書記録や読みたい本へそのまま残せます。</p>
           </div>
-          <label class="catalog-search-box">
+          <label class="catalog-search-box" hidden>
             <span>⌕</span>
             <input
               id="catalog-search"
@@ -126,10 +126,11 @@
           </label>
           <div class="catalog-discovery-heading">
             <div>
-              <small>MONTHLY SHELF</small>
-              <strong id="catalog-discovery-title">今月の棚</strong>
+              <small>EIGHT BOOKS / MONTHLY</small>
+              <strong id="catalog-discovery-title">今月の八冊</strong>
+              <p id="catalog-discovery-description">この棚は毎月入れ替わります。</p>
             </div>
-            <button class="text-button" id="refresh-catalog-discovery">棚を入れ替える ↻</button>
+            <button class="text-button" id="refresh-catalog-discovery">ほかの本を見る ↻</button>
           </div>
           <div class="catalog-results" id="catalog-results"></div>
         </section>
@@ -180,14 +181,6 @@
             <button data-filter="wishlist">読みたい本</button>
           </div>
         </div>
-        <section class="sync-panel">
-          <div>
-            <span>CONTINUE ON ANOTHER DEVICE</span>
-            <h2>ほかの端末でも、同じ本棚を。</h2>
-            <p>メールでログインすると、スマホやPCから同じ読書記録を続けられます。</p>
-          </div>
-          <button class="primary-button" data-open-auth>端末間の同期を設定 <span>→</span></button>
-        </section>
         <div class="library-summary" id="library-summary"></div>
         <div class="shelf-grid" id="library-list"></div>
         <div class="empty-state" id="library-empty" hidden>
@@ -195,6 +188,14 @@
           <h2>この棚には、まだ本がありません。</h2>
           <p>最初の一冊を記録すると、ここから読書の記憶が始まります。</p>
         </div>
+        <section class="sync-panel library-sync-panel">
+          <div>
+            <span>CONTINUE ON ANOTHER DEVICE</span>
+            <h2>ほかの端末でも、同じ本棚を。</h2>
+            <p>メールでログインすると、スマホやPCから同じ読書記録を続けられます。</p>
+          </div>
+          <button class="primary-button" data-open-auth>端末間の同期を設定 <span>→</span></button>
+        </section>
       </section>
 
       <section class="app-view inner-view" id="view-journal">
@@ -224,6 +225,12 @@
             <div id="tone-cloud" class="tone-cloud"></div>
             <div class="ice-orbit" aria-hidden="true"><i></i><b></b></div>
           </aside>
+        </div>
+        <div class="journal-sync-link">
+          <button data-open-auth>
+            <span>ほかの端末でも続きを使う</span>
+            <small>同期を設定 →</small>
+          </button>
         </div>
       </section>
 
@@ -453,6 +460,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260617-3"></script>
+    <script src="./reading-app.js?v=20260617-5"></script>
   </body>
 </html>

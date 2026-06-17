@@ -301,11 +301,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: end;
   justify-content: space-between;
-  margin: 8px 0 18px;
+  margin: 48px 0 18px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(91,107,120,.16);
 }
 .catalog-discovery-heading div { display: grid; gap: 4px; }
 .catalog-discovery-heading small { color: #8a97a2; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
 .catalog-discovery-heading strong { font: 500 15px "Shippori Mincho", serif; }
+.catalog-discovery-heading p { margin: 4px 0 0; color: #7c8994; font-size: 9px; line-height: 1.7; }
+.catalog-search-box[hidden] + .catalog-discovery-heading { margin-top: 0; padding-top: 0; border-top: 0; }
 .catalog-results { display: grid; border-top: 1px solid var(--line); }
 .catalog-item {
   display: grid;
@@ -463,6 +467,8 @@ img { display: block; max-width: 100%; }
 .sync-panel span { color: #8a97a2; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
 .sync-panel h2 { margin: 7px 0 4px; font: 500 18px "Shippori Mincho", serif; }
 .sync-panel p { margin: 0; color: #74818c; font-size: 9px; line-height: 1.8; }
+.library-sync-panel { margin-top: 72px; }
+.journal-sync-link { display: none; }
 .library-tools { display: flex; align-items: center; justify-content: space-between; gap: 30px; }
 .search-box {
   display: flex;
@@ -705,19 +711,24 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   width: 100%;
   min-height: 46px;
   margin-top: 9px;
-  padding: 12px 14px;
-  border: 1px solid #bbc6cf;
-  border-radius: 2px;
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(91,109,124,.32);
+  border-radius: 0;
   outline: 0;
-  background: rgba(255,255,255,.52);
+  background: linear-gradient(180deg, transparent 15%, rgba(225,232,237,.16));
   color: var(--ink);
   font-size: 14px;
+  box-shadow: none;
+  transition: border-color .2s ease, background .2s ease;
 }
+.form-grid input:hover, .form-grid select:hover, .form-grid textarea:hover { border-color: rgba(75,96,113,.46); }
 .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
-  border-color: #718393;
-  background: rgba(255,255,255,.8);
-  box-shadow: 0 0 0 3px rgba(119,139,155,.08);
+  border-color: rgba(67,89,106,.68);
+  background: linear-gradient(180deg, transparent 10%, rgba(218,227,233,.25));
+  box-shadow: none;
 }
+.form-grid input::placeholder, .form-grid textarea::placeholder { color: rgba(91,107,120,.52); }
 .form-grid textarea { min-height: 120px; resize: vertical; line-height: 1.8; }
 .form-section-label {
   margin: 0 0 -8px;
@@ -1021,22 +1032,35 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   }
   .site-header nav {
     position: fixed;
-    right: 20px;
+    right: 10px;
     bottom: calc(10px + env(safe-area-inset-bottom));
-    left: 20px;
+    left: 10px;
     z-index: 50;
     justify-content: space-around;
     height: 56px;
-    padding: 6px;
-    gap: 5px;
+    padding: 7px;
+    gap: 3px;
     border: 1px solid rgba(98,114,127,.2);
     border-radius: 18px;
     background: rgba(244,246,248,.94);
     box-shadow: 0 12px 35px rgba(58,73,87,.14);
     backdrop-filter: blur(18px);
   }
-  .site-header nav button { flex: 1; justify-content: center; min-width: 0; padding: 0 5px; border-radius: 13px; font-size: 9px; }
-  .site-header nav button.active { border-color: rgba(115,131,143,.24); background: rgba(255,255,255,.78); }
+  .site-header nav button {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 5px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 10px;
+    font-size: 9px;
+  }
+  .site-header nav button.active {
+    border-color: transparent;
+    background: linear-gradient(180deg, rgba(226,233,238,.62), rgba(235,240,244,.38));
+    box-shadow: none;
+  }
   .quiet-button { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; }
   .hero-copy { min-height: 570px; padding: 80px 8vw 60px; }
@@ -1059,8 +1083,8 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
 
 @media (max-width: 640px) {
   .site-header { height: 64px; padding: 0 20px; }
-  .site-header nav { right: 18px; left: 18px; height: 58px; padding: 6px; gap: 4px; }
-  .site-header nav button { padding: 0 2px; font-size: 8.5px; letter-spacing: -.02em; white-space: nowrap; }
+  .site-header nav { right: 7px; left: 7px; height: 60px; padding: 8px; gap: 3px; }
+  .site-header nav button { min-height: 42px; padding: 0 3px; font-size: 8.5px; letter-spacing: -.02em; white-space: nowrap; }
   .brand small { display: none; }
   .hero-copy { min-height: 520px; padding: 60px 24px 45px; }
   .hero h1 { font-size: 42px; }
@@ -1086,6 +1110,10 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .journal-overview { grid-template-columns: 1fr; }
   .journal-overview:not(.show-average) { grid-template-columns: 1fr; }
   .journal-display-options { margin: -66px 0 60px; }
+  .journal-sync-link { display: block; margin-top: 66px; border-top: 1px solid rgba(104,120,133,.17); }
+  .journal-sync-link button { display: flex; width: 100%; padding: 18px 2px; align-items: center; justify-content: space-between; color: #6f7d89; text-align: left; }
+  .journal-sync-link span { font: 400 11px "Shippori Mincho", serif; }
+  .journal-sync-link small { color: #89959f; font-size: 8px; }
   .metric { min-height: 120px; border-right: 0; border-bottom: 1px solid var(--line); }
   .timeline-item { grid-template-columns: 70px 1fr; padding-left: 20px; }
   .modal-layer { padding: 0; }
@@ -1098,7 +1126,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .form-grid .wide { grid-column: auto; }
   .form-grid { gap: 23px; }
   .form-grid label { font-size: 11px; }
-  .form-grid input, .form-grid select, .form-grid textarea { min-height: 50px; padding: 13px 14px; font-size: 16px; }
+  .form-grid input, .form-grid select, .form-grid textarea { min-height: 50px; padding: 13px 4px; font-size: 16px; }
   .important-field input { min-height: 56px; font-size: 18px; }
   .form-section-label { margin-top: 4px; font-size: 12px; }
   .form-actions {

@@ -446,7 +446,7 @@ function monthlyOrder(items, offset = 0) {
 function monthlyCatalogBooks(limit = 8) {
   const unread = BOOK_CATALOG.filter(book => {
     const libraryBook = findDuplicateByTitleAuthor(book.title, book.author);
-    return libraryBook?.status !== "read";
+    return libraryBook?.status !== "read" || libraryBook?.readMarkedFromShortcut;
   });
   const source = unread.length >= limit ? unread : BOOK_CATALOG;
   return monthlyOrder(source, catalogDiscoveryOffset).slice(0, limit);
@@ -709,7 +709,7 @@ function renderHome() {
         <div class="new-cover" style="--cover:${book.color}"></div>
         <div><h3>${escapeHtml(book.title)}</h3><span>${formatDate(book.date)} 発売 / ${escapeHtml(book.author)}</span></div>
         <p>${escapeHtml(book.description)}</p>
-        <button data-action="save-new" data-index="${index}">${owned ? "本棚に登録済み ✓" : "気になる本へ ＋"}</button>
+        <button data-action="save-new" data-index="${index}">${shelfShortcutLabel(owned, "気になる本へ ＋")}</button>
       </article>
     `;
   }).join("");
@@ -717,7 +717,11 @@ function renderHome() {
 
 function renderCatalogResults(query = "") {
   const results = query ? searchBooks(query, { limit: 10 }) : monthlyCatalogBooks(8);
-  $("#catalog-discovery-title").textContent = query ? "検索結果" : `${new Date().getMonth() + 1}月の棚`;
+  $("#catalog-section-title").textContent = `${new Date().getMonth() + 1}月にひらく棚`;
+  $("#catalog-discovery-title").textContent = query ? "検索結果" : "今月の八冊";
+  $("#catalog-discovery-description").textContent = query
+    ? `「${query}」に近いタイトルと著者を表示しています。`
+    : "この棚は毎月入れ替わります。";
   $("#refresh-catalog-discovery").hidden = Boolean(query);
   $("#catalog-results").innerHTML = results.length ? results.map(book => {
     const isLibraryResult = book.source === "library";
@@ -730,8 +734,8 @@ function renderCatalogResults(query = "") {
         </button>
         <div class="catalog-actions">
           <button data-action="${isLibraryResult ? "record-library" : "record-catalog"}" data-id="${book.id}">記録をつける</button>
-          <button data-action="${isLibraryResult ? "open-library" : "save-catalog"}" data-id="${book.id}" ${owned ? "aria-label=\"本棚にある本を開く\"" : ""}>${owned ? `${STATUS_LABELS[owned.status]} ✓` : "読みたい本へ"}</button>
-          <button class="subtle-check ${owned?.status === "read" ? "checked" : ""}" data-action="mark-catalog-read" data-id="${book.id}">${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}</button>
+          <button data-action="${isLibraryResult ? canUndoShelfAdd(owned) ? "cancel-library-shortcut" : "open-library" : "save-catalog"}" data-id="${book.id}" ${owned && !canUndoShelfAdd(owned) ? "aria-label=\"本棚にある本を開く\"" : ""}>${shelfShortcutLabel(owned)}</button>
+          <button class="subtle-check ${owned?.status === "read" ? "checked" : ""} ${owned?.readMarkedFromShortcut ? "undoable" : ""}" data-action="mark-catalog-read" data-id="${book.id}">${readShortcutLabel(owned)}</button>
         </div>
       </article>
     `;
@@ -747,7 +751,7 @@ function renderRecommendations() {
       <article class="book-card">
         <button class="book-card-main" data-action="recommendation" data-index="${recommendationPool.indexOf(book)}">
           <div class="book-cover" style="--cover:${book.color}">
-          ${owned ? `<span class="owned-mark">IN YOUR SHELF</span>` : ""}
+          ${owned ? `<span class="owned-mark">${canUndoShelfAdd(owned) ? "本棚登録を取り消せます" : "IN YOUR SHELF"}</span>` : ""}
             <strong>${escapeHtml(book.title)}</strong>
           </div>
           <p>0${index + 1} / ${escapeHtml(book.genre.toUpperCase())}</p>
@@ -755,8 +759,8 @@ function renderRecommendations() {
           <span>${escapeHtml(book.author)}</span>
           <small class="reason">${escapeHtml(book.reason)}</small>
         </button>
-        <button class="recommend-read-check ${owned?.status === "read" ? "checked" : ""}" data-action="mark-recommendation-read" data-index="${recommendationPool.indexOf(book)}">
-          ${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}
+        <button class="recommend-read-check ${owned?.status === "read" ? "checked" : ""} ${owned?.readMarkedFromShortcut ? "undoable" : ""}" data-action="mark-recommendation-read" data-index="${recommendationPool.indexOf(book)}">
+          ${readShortcutLabel(owned)}
         </button>
       </article>
     `;
@@ -780,10 +784,10 @@ function openCatalogDetail(book) {
         <small>読書記録</small><strong>記録をつける</strong><span>読み終えた日や感想を残す</span>
       </button>
       <button data-action="detail-wishlist" data-id="${sourceBook.id}">
-        <small>読みたい本</small><strong>${owned ? STATUS_LABELS[owned.status] : "本棚に入れる"}</strong><span>${owned ? "本棚の登録内容を確認する" : "あとで読む本として覚えておく"}</span>
+        <small>読みたい本</small><strong>${shelfShortcutLabel(owned, "本棚に入れる")}</strong><span>${canUndoShelfAdd(owned) ? "ワンタッチで追加した登録を戻す" : owned ? "本棚の登録内容を確認する" : "あとで読む本として覚えておく"}</span>
       </button>
       <button data-action="detail-read" data-id="${sourceBook.id}">
-        <small>読了</small><strong>${owned?.status === "read" ? "読了済み ✓" : "読んだ本にする"}</strong><span>感想は後から追加できます</span>
+        <small>読了</small><strong>${owned?.readMarkedFromShortcut ? "読了を取り消す" : owned?.status === "read" ? "読了済み ✓" : "読んだ本にする"}</strong><span>感想は後から追加できます</span>
       </button>
     </div>
   `;
@@ -818,6 +822,27 @@ function findDuplicateByTitleAuthor(title, author = "", excludeId = "") {
     .map(book => ({ book, score: fuzzyTitleAuthorScore(`${title} ${author}`.trim(), enrichBookFromCatalog(book)) }))
     .sort((a, b) => b.score - a.score);
   return candidates[0]?.score >= 118 ? candidates[0].book : findDuplicate(title, excludeId);
+}
+
+function hasSavedBookHistory(bookId) {
+  return state.records.some(record => record.bookId === bookId)
+    || state.reviews.some(review => review.bookId === bookId);
+}
+
+function canUndoShelfAdd(book) {
+  return Boolean(book?.addedFromShortcut && !hasSavedBookHistory(book.id));
+}
+
+function shelfShortcutLabel(book, emptyLabel = "読みたい本へ") {
+  if (!book) return emptyLabel;
+  if (canUndoShelfAdd(book)) return "本棚登録を取り消す";
+  return `${STATUS_LABELS[book.status]} ✓`;
+}
+
+function readShortcutLabel(book) {
+  if (book?.readMarkedFromShortcut) return "読了を取り消す";
+  if (book?.status === "read") return "読了済み ✓";
+  return "読んだことがある";
 }
 
 function findBestLibraryMatch(query, excludeId = "") {
@@ -1158,6 +1183,9 @@ function saveRecord(event) {
     state.records.unshift(record);
   }
   book.status = status;
+  delete book.addedFromShortcut;
+  delete book.readMarkedFromShortcut;
+  delete book.shortcutPreviousStatus;
   if (!book.author && author) book.author = author;
   if (status === "read" && book.pages) book.progress = book.pages;
   book.updatedAt = new Date().toISOString();
@@ -1217,6 +1245,11 @@ function saveReview(event) {
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
+  if (book) {
+    delete book.addedFromShortcut;
+    delete book.readMarkedFromShortcut;
+    delete book.shortcutPreviousStatus;
+  }
   if (existing) {
     state.reviews[state.reviews.findIndex(item => item.id === id)] = review;
     addActivity("review-updated", `『${book?.title || "本"}』のレビューを編集`);
@@ -1246,6 +1279,14 @@ function deleteReview(id) {
 function saveSuggestedBook(book) {
   const duplicate = findDuplicateByTitleAuthor(book.title, book.author);
   if (duplicate) {
+    if (canUndoShelfAdd(duplicate)) {
+      state.books = state.books.filter(item => item.id !== duplicate.id);
+      addActivity("book-shortcut-cancelled", `『${duplicate.title}』の本棚登録を取り消し`);
+      saveState();
+      renderAll();
+      showToast(`『${duplicate.title}』の本棚登録を取り消しました。`);
+      return;
+    }
     showToast(`『${duplicate.title}』はすでに本棚にあります。`);
     openView("library");
     return;
@@ -1262,6 +1303,7 @@ function saveSuggestedBook(book) {
     progress: 0,
     tone: book.tone,
     color: book.color,
+    addedFromShortcut: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   });
@@ -1274,6 +1316,26 @@ function saveSuggestedBook(book) {
 function markSuggestedAsRead(book) {
   if (!book) return;
   let libraryBook = bookById(book.id) || findDuplicateByTitleAuthor(book.title, book.author);
+  if (libraryBook?.readMarkedFromShortcut) {
+    const previousStatus = libraryBook.shortcutPreviousStatus;
+    if (libraryBook.addedFromShortcut && previousStatus == null && !hasSavedBookHistory(libraryBook.id)) {
+      state.books = state.books.filter(item => item.id !== libraryBook.id);
+    } else {
+      libraryBook.status = previousStatus || "wishlist";
+      delete libraryBook.readMarkedFromShortcut;
+      delete libraryBook.shortcutPreviousStatus;
+      libraryBook.updatedAt = new Date().toISOString();
+    }
+    addActivity("book-read-shortcut-cancelled", `『${libraryBook.title}』の読了を取り消し`);
+    saveState();
+    renderAll();
+    showToast(`『${libraryBook.title}』の読了を取り消しました。`);
+    return;
+  }
+  if (libraryBook?.status === "read") {
+    showToast(`『${libraryBook.title}』は読書記録に読了として残っています。`);
+    return;
+  }
   if (!libraryBook) {
     libraryBook = {
       id: uid("book"),
@@ -1287,11 +1349,16 @@ function markSuggestedAsRead(book) {
       progress: 0,
       tone: book.tone || "",
       color: book.color || COLORS[state.books.length % COLORS.length],
+      addedFromShortcut: true,
+      readMarkedFromShortcut: true,
+      shortcutPreviousStatus: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     state.books.unshift(libraryBook);
   } else {
+    libraryBook.shortcutPreviousStatus = libraryBook.status;
+    libraryBook.readMarkedFromShortcut = true;
     libraryBook.status = "read";
     libraryBook.updatedAt = new Date().toISOString();
   }
@@ -1305,6 +1372,9 @@ function updateBookStatus(id, status) {
   const book = bookById(id);
   if (!book) return;
   book.status = status;
+  delete book.addedFromShortcut;
+  delete book.readMarkedFromShortcut;
+  delete book.shortcutPreviousStatus;
   if (status === "read" && book.pages) book.progress = book.pages;
   book.updatedAt = new Date().toISOString();
   addActivity("book-status-updated", `『${book.title}』を「${STATUS_LABELS[status]}」に変更`);
@@ -1363,11 +1433,9 @@ function chooseFortuneBook(mood) {
   return pool[Math.floor(Math.random() * pool.length)] || recommendationPool[0];
 }
 
-function drawFortune() {
-  if (!selectedMood) return;
-  const windowElement = $(".draw-window");
-  currentFortuneBook = chooseFortuneBook(selectedMood);
-  const owned = findDuplicate(currentFortuneBook.title);
+function renderFortuneBookResult() {
+  if (!currentFortuneBook) return;
+  const owned = findDuplicateByTitleAuthor(currentFortuneBook.title, currentFortuneBook.author);
   $("#fortune-result").innerHTML = `
     <div class="fortune-cover" style="--cover:${currentFortuneBook.color}">
       <strong>${escapeHtml(currentFortuneBook.title)}</strong>
@@ -1378,12 +1446,19 @@ function drawFortune() {
       <span>${escapeHtml(currentFortuneBook.author)} / ${escapeHtml(currentFortuneBook.genre)}</span>
       <p>${escapeHtml(currentFortuneBook.reason || currentFortuneBook.description)}</p>
       <div class="fortune-actions">
-        <button class="primary-button" data-action="fortune-save">${owned ? "本棚にあります ✓" : "読みたい本へ ＋"}</button>
-        <button class="text-button subtle-check ${owned?.status === "read" ? "checked" : ""}" data-action="fortune-read">${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}</button>
+        <button class="primary-button" data-action="fortune-save">${shelfShortcutLabel(owned, "読みたい本へ ＋")}</button>
+        <button class="text-button subtle-check ${owned?.status === "read" ? "checked" : ""} ${owned?.readMarkedFromShortcut ? "undoable" : ""}" data-action="fortune-read">${readShortcutLabel(owned)}</button>
         <button class="text-button" data-action="draw-again">もう一度引く</button>
       </div>
     </div>
   `;
+}
+
+function drawFortune() {
+  if (!selectedMood) return;
+  const windowElement = $(".draw-window");
+  currentFortuneBook = chooseFortuneBook(selectedMood);
+  renderFortuneBookResult();
   windowElement.classList.remove("revealed");
   windowElement.classList.add("drawing");
   $("#draw-fortune").disabled = true;
@@ -1426,17 +1501,30 @@ function handleAction(target) {
   if (action === "detail-wishlist") {
     const libraryBook = bookById(id);
     const catalogBook = catalogById(id);
-    if (libraryBook) openExistingBook(libraryBook);
-    else if (catalogBook) {
-      saveSuggestedBook(catalogBook);
+    if (libraryBook && canUndoShelfAdd(libraryBook)) {
+      const sourceBook = enrichBookFromCatalog(libraryBook);
+      saveSuggestedBook(sourceBook);
+      openCatalogDetail(sourceBook);
+    } else if (libraryBook) {
       closeModal(true);
+      openExistingBook(libraryBook);
+    }
+    else if (catalogBook) {
+      const existing = findDuplicateByTitleAuthor(catalogBook.title, catalogBook.author);
+      if (existing && !canUndoShelfAdd(existing)) {
+        closeModal(true);
+        openExistingBook(existing);
+      } else {
+        saveSuggestedBook(catalogBook);
+        openCatalogDetail(catalogBook);
+      }
     }
   }
   if (action === "detail-read") {
     const book = bookById(id) || catalogById(id);
     if (book) {
       markSuggestedAsRead(book);
-      closeModal(true);
+      openCatalogDetail(book);
     }
   }
   if (action === "record-catalog") {
@@ -1448,12 +1536,14 @@ function handleAction(target) {
     const book = bookById(id);
     if (book) openExistingBook(book);
   }
+  if (action === "cancel-library-shortcut") {
+    const book = bookById(id);
+    if (book) saveSuggestedBook(enrichBookFromCatalog(book));
+  }
   if (action === "save-catalog") {
     const book = catalogById(id);
     if (book) {
-      const duplicate = findDuplicateByTitleAuthor(book.title, book.author);
-      if (duplicate) openExistingBook(duplicate);
-      else saveSuggestedBook(book);
+      saveSuggestedBook(book);
       renderCatalogResults($("#catalog-search").value);
     }
   }
@@ -1470,12 +1560,14 @@ function handleAction(target) {
     $(`#spoiler-${id}`).hidden = false;
   }
   if (action === "fortune-save" && currentFortuneBook) {
+    const existing = findDuplicateByTitleAuthor(currentFortuneBook.title, currentFortuneBook.author);
     saveSuggestedBook(currentFortuneBook);
-    closeModal(true);
+    if (existing && !canUndoShelfAdd(existing)) closeModal(true);
+    else renderFortuneBookResult();
   }
   if (action === "fortune-read" && currentFortuneBook) {
     markSuggestedAsRead(currentFortuneBook);
-    closeModal(true);
+    renderFortuneBookResult();
   }
   if (action === "draw-again") {
     drawFortune();

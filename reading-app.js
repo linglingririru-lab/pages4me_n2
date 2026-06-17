@@ -1,8 +1,9 @@
 const STORAGE_KEY = "yohaku-reading-app-v1";
 const AUTH_SESSION_KEY = "yohaku-reading-auth-session-v1";
+const JOURNAL_AVERAGE_KEY = "yohaku-show-average-rating";
 const CATALOG_VERSION = "2026-06-demo";
-const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260617-1";
-const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-1";
+const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260617-3";
+const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-3";
 let BOOK_CATALOG = [];
 let activeView = "";
 let remoteSyncReady = false;
@@ -20,7 +21,10 @@ const CATEGORY_LABELS = {
   "general-fiction": "一般文芸",
   "literary-fiction": "文学",
   mystery: "ミステリ",
-  "modern-classics": "近代文学"
+  "modern-classics": "近代文学",
+  "world-classics": "海外文学",
+  "science-fiction": "SF",
+  fantasy: "幻想文学"
 };
 
 const COLORS = ["#dbe1e6", "#d2d9e1", "#c9d1dc", "#dddde5", "#cfd9dc", "#e0e3e6"];
@@ -170,10 +174,13 @@ function loadAuthSession() {
 let state = loadState();
 let currentFilter = "all";
 let recommendationOffset = 0;
+let catalogDiscoveryOffset = 0;
+let modalInitialFormState = "";
 let toastTimer;
 let selectedMood = "";
 let currentFortuneBook = null;
 let fortuneTimer;
+let showAverageRating = localStorage.getItem(JOURNAL_AVERAGE_KEY) === "true";
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -229,17 +236,17 @@ function setSyncStatus(message) {
 
 async function loadRemoteState() {
   if (!hasSupabaseConfig()) {
-    setSyncStatus("DATA STAYS IN THIS BROWSER");
+    setSyncStatus("この端末に保存されています");
     return null;
   }
   const config = supabaseConfig();
   const ownerId = activeOwnerId(config);
   if (config.authRequired && !ownerId) {
     remoteSyncReady = false;
-    setSyncStatus("LOGIN TO SYNC DATABASE");
+    setSyncStatus("端末間の同期は未設定です");
     return null;
   }
-  setSyncStatus("SYNCING WITH DATABASE");
+  setSyncStatus("読書記録を同期しています");
   try {
     const endpoint = `${config.url}/rest/v1/yohaku_app_states?owner_id=eq.${encodeURIComponent(ownerId)}&select=state&limit=1`;
     const response = await fetch(endpoint, { headers: syncHeaders(config) });
@@ -247,16 +254,16 @@ async function loadRemoteState() {
     const rows = await response.json();
     const remoteState = rows?.[0]?.state;
     if (remoteState && Array.isArray(remoteState.books) && Array.isArray(remoteState.records) && Array.isArray(remoteState.reviews)) {
-      setSyncStatus("DATABASE SYNC ON");
+      setSyncStatus("ほかの端末と同期されています");
       return remoteState;
     }
     remoteSyncReady = true;
     queueRemoteSync(80);
-    setSyncStatus("DATABASE READY");
+    setSyncStatus("端末間の同期を開始しました");
     return null;
   } catch (error) {
     console.warn("Supabaseから読み込めませんでした。ブラウザ内の保存を使います。", error);
-    setSyncStatus("DATABASE OFFLINE / LOCAL COPY");
+    setSyncStatus("この端末には保存済みです");
     return null;
   }
 }
@@ -266,7 +273,7 @@ async function persistStateRemote() {
   const config = supabaseConfig();
   const ownerId = activeOwnerId(config);
   if (!ownerId) {
-    setSyncStatus("LOGIN TO SYNC DATABASE");
+    setSyncStatus("端末間の同期は未設定です");
     return;
   }
   try {
@@ -284,10 +291,10 @@ async function persistStateRemote() {
       })
     });
     if (!response.ok) throw new Error(`Supabase write failed: ${response.status}`);
-    setSyncStatus("DATABASE SYNC ON");
+    setSyncStatus("ほかの端末と同期されています");
   } catch (error) {
     console.warn("Supabaseへ保存できませんでした。ブラウザ内には保存済みです。", error);
-    setSyncStatus("DATABASE OFFLINE / LOCAL COPY");
+    setSyncStatus("この端末には保存済みです");
   }
 }
 
@@ -344,7 +351,7 @@ async function requestMagicLink(event) {
   event.preventDefault();
   const config = supabaseConfig();
   if (!hasSupabaseConfig()) {
-    showToast("SupabaseのURLとanon keyを設定してください。");
+    showToast("端末間の同期は現在準備中です。この端末には保存されています。");
     return;
   }
   const email = $("#auth-email").value.trim();
@@ -379,28 +386,83 @@ async function signOut() {
   authSession = null;
   remoteSyncReady = false;
   localStorage.removeItem(AUTH_SESSION_KEY);
-  setSyncStatus(hasSupabaseConfig() ? "LOGIN TO SYNC DATABASE" : "DATA STAYS IN THIS BROWSER");
+  setSyncStatus(hasSupabaseConfig() ? "端末間の同期は未設定です" : "この端末に保存されています");
   updateAuthUi();
-  closeModal();
+  closeModal(true);
   showToast("ログアウトしました。");
 }
 
 function updateAuthUi() {
-  const button = $("#auth-button");
+  const buttons = $$('[data-open-auth]');
   const signout = $("#auth-signout");
-  if (!button) return;
+  if (!buttons.length) return;
   if (!hasSupabaseConfig()) {
-    button.textContent = "同期設定";
+    buttons.forEach(button => {
+      if (button.classList.contains("auth-button")) button.textContent = "端末間で同期";
+    });
     if (signout) signout.hidden = true;
     return;
   }
   const loggedIn = Boolean(activeOwnerId());
-  button.textContent = loggedIn ? "同期中" : "同期ログイン";
+  buttons.forEach(button => {
+    if (button.classList.contains("auth-button")) button.textContent = loggedIn ? "同期中" : "端末間で同期";
+  });
   if (signout) signout.hidden = !loggedIn;
 }
 
 function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function monthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function stableHash(value = "") {
+  let hash = 2166136261;
+  for (const char of String(value)) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15;
+  hash = Math.imul(hash, 0x846ca68b);
+  return (hash ^ (hash >>> 16)) >>> 0;
+}
+
+function monthlyOrder(items, offset = 0) {
+  const ordered = [...items].sort((a, b) => {
+    const aKey = a.id || `${a.title}-${a.author}`;
+    const bKey = b.id || `${b.title}-${b.author}`;
+    return stableHash(`${monthKey()}-${aKey}`) - stableHash(`${monthKey()}-${bKey}`);
+  });
+  if (!ordered.length) return [];
+  const shift = offset % ordered.length;
+  return [...ordered.slice(shift), ...ordered.slice(0, shift)];
+}
+
+function monthlyCatalogBooks(limit = 8) {
+  const unread = BOOK_CATALOG.filter(book => {
+    const libraryBook = findDuplicateByTitleAuthor(book.title, book.author);
+    return libraryBook?.status !== "read";
+  });
+  const source = unread.length >= limit ? unread : BOOK_CATALOG;
+  return monthlyOrder(source, catalogDiscoveryOffset).slice(0, limit);
+}
+
+function distinctAuthors(items, limit) {
+  const authors = new Set();
+  const selected = [];
+  for (const item of items) {
+    const author = normalize(item.author);
+    if (!author || authors.has(author)) continue;
+    authors.add(author);
+    selected.push(item);
+    if (selected.length === limit) break;
+  }
+  return selected;
 }
 
 function escapeHtml(value = "") {
@@ -435,6 +497,7 @@ function formatDate(value, includeTime = false) {
 
 function stars(rating) {
   const value = Number(rating) || 0;
+  if (!value) return "評価なし";
   return `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 }
 
@@ -581,15 +644,34 @@ function openModal(id) {
   layer.setAttribute("aria-hidden", "false");
   $$(".modal").forEach(modal => modal.classList.toggle("active", modal.id === id));
   document.body.classList.add("modal-open");
+  modalInitialFormState = serializeActiveModalForm();
   setTimeout(() => $(`#${id} input:not([type="hidden"]), #${id} select`)?.focus(), 80);
 }
 
-function closeModal() {
+function serializeActiveModalForm() {
+  const form = $(".modal.active form");
+  if (!form || form.id === "auth-form") return "";
+  return JSON.stringify([...form.elements]
+    .filter(field => field.name !== "" || field.id)
+    .map(field => [field.id || field.name, field.type === "checkbox" ? field.checked : field.value]));
+}
+
+function refreshModalInitialState() {
+  modalInitialFormState = serializeActiveModalForm();
+}
+
+function closeModal(force = false) {
+  const currentFormState = serializeActiveModalForm();
+  if (!force && modalInitialFormState && currentFormState !== modalInitialFormState) {
+    if (!window.confirm("入力した内容を破棄して閉じますか？")) return false;
+  }
   clearTimeout(fortuneTimer);
   $("#modal-layer").classList.remove("open");
   $("#modal-layer").setAttribute("aria-hidden", "true");
   $$(".modal").forEach(modal => modal.classList.remove("active"));
   document.body.classList.remove("modal-open");
+  modalInitialFormState = "";
+  return true;
 }
 
 function bookOptions(selected = "") {
@@ -634,19 +716,22 @@ function renderHome() {
 }
 
 function renderCatalogResults(query = "") {
-  const results = query ? searchBooks(query, { limit: 10 }) : BOOK_CATALOG.slice(0, 8);
+  const results = query ? searchBooks(query, { limit: 10 }) : monthlyCatalogBooks(8);
+  $("#catalog-discovery-title").textContent = query ? "検索結果" : `${new Date().getMonth() + 1}月の棚`;
+  $("#refresh-catalog-discovery").hidden = Boolean(query);
   $("#catalog-results").innerHTML = results.length ? results.map(book => {
     const isLibraryResult = book.source === "library";
     const owned = isLibraryResult ? bookById(book.id) : findDuplicateByTitleAuthor(book.title, book.author);
     return `
       <article class="catalog-item">
-        <div>
+        <button class="catalog-book-main" data-action="open-catalog-detail" data-id="${book.id}">
           <h3>${escapeHtml(book.title)}</h3>
           <span>${escapeHtml(book.author)} / ${escapeHtml(CATEGORY_LABELS[book.category] || book.category || "小説")}${book.publishedYear ? ` / ${book.publishedYear}` : ""}</span>
-        </div>
+        </button>
         <div class="catalog-actions">
           <button data-action="${isLibraryResult ? "record-library" : "record-catalog"}" data-id="${book.id}">記録をつける</button>
           <button data-action="${isLibraryResult ? "open-library" : "save-catalog"}" data-id="${book.id}" ${owned ? "aria-label=\"本棚にある本を開く\"" : ""}>${owned ? `${STATUS_LABELS[owned.status]} ✓` : "読みたい本へ"}</button>
+          <button class="subtle-check ${owned?.status === "read" ? "checked" : ""}" data-action="mark-catalog-read" data-id="${book.id}">${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}</button>
         </div>
       </article>
     `;
@@ -654,22 +739,55 @@ function renderCatalogResults(query = "") {
 }
 
 function renderRecommendations() {
-  const ordered = [...recommendationPool.slice(recommendationOffset), ...recommendationPool.slice(0, recommendationOffset)];
-  $("#recommendation-list").innerHTML = ordered.slice(0, 3).map((book, index) => {
+  const ordered = monthlyOrder(recommendationPool.filter(book => normalize(book.author) !== normalize("村上春樹")), recommendationOffset);
+  const recommendations = distinctAuthors(ordered, 3);
+  $("#recommendation-list").innerHTML = recommendations.map((book, index) => {
     const owned = findDuplicate(book.title);
     return `
-      <button class="book-card" data-action="recommendation" data-index="${recommendationPool.indexOf(book)}">
-        <div class="book-cover" style="--cover:${book.color}">
+      <article class="book-card">
+        <button class="book-card-main" data-action="recommendation" data-index="${recommendationPool.indexOf(book)}">
+          <div class="book-cover" style="--cover:${book.color}">
           ${owned ? `<span class="owned-mark">IN YOUR SHELF</span>` : ""}
-          <strong>${escapeHtml(book.title)}</strong>
-        </div>
-        <p>0${index + 1} / ${escapeHtml(book.genre.toUpperCase())}</p>
-        <h3>${escapeHtml(book.title)}</h3>
-        <span>${escapeHtml(book.author)}</span>
-        <small class="reason">${escapeHtml(book.reason)}</small>
-      </button>
+            <strong>${escapeHtml(book.title)}</strong>
+          </div>
+          <p>0${index + 1} / ${escapeHtml(book.genre.toUpperCase())}</p>
+          <h3>${escapeHtml(book.title)}</h3>
+          <span>${escapeHtml(book.author)}</span>
+          <small class="reason">${escapeHtml(book.reason)}</small>
+        </button>
+        <button class="recommend-read-check ${owned?.status === "read" ? "checked" : ""}" data-action="mark-recommendation-read" data-index="${recommendationPool.indexOf(book)}">
+          ${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}
+        </button>
+      </article>
     `;
   }).join("");
+}
+
+function openCatalogDetail(book) {
+  if (!book) return;
+  const libraryBook = book.source === "library" ? bookById(book.id) : null;
+  const sourceBook = libraryBook ? enrichBookFromCatalog(libraryBook) : book;
+  const owned = libraryBook || findDuplicateByTitleAuthor(sourceBook.title, sourceBook.author);
+  const category = CATEGORY_LABELS[sourceBook.category] || sourceBook.category || "小説";
+  $("#catalog-detail-content").innerHTML = `
+    <div class="catalog-detail-heading">
+      <span>${escapeHtml(category)}${sourceBook.publishedYear ? ` / ${sourceBook.publishedYear}` : ""}</span>
+      <h2 id="catalog-detail-title">${escapeHtml(sourceBook.title)}</h2>
+      <p>${escapeHtml(sourceBook.author)}</p>
+    </div>
+    <div class="catalog-detail-actions" aria-label="この本ですること">
+      <button data-action="detail-record" data-id="${sourceBook.id}">
+        <small>読書記録</small><strong>記録をつける</strong><span>読み終えた日や感想を残す</span>
+      </button>
+      <button data-action="detail-wishlist" data-id="${sourceBook.id}">
+        <small>読みたい本</small><strong>${owned ? STATUS_LABELS[owned.status] : "本棚に入れる"}</strong><span>${owned ? "本棚の登録内容を確認する" : "あとで読む本として覚えておく"}</span>
+      </button>
+      <button data-action="detail-read" data-id="${sourceBook.id}">
+        <small>読了</small><strong>${owned?.status === "read" ? "読了済み ✓" : "読んだ本にする"}</strong><span>感想は後から追加できます</span>
+      </button>
+    </div>
+  `;
+  openModal("catalog-detail-modal");
 }
 
 function findDuplicate(query, excludeId = "") {
@@ -772,11 +890,13 @@ function renderJournal() {
   const monthly = records.filter(record => record.date.startsWith(thisMonth)).length;
   const ratings = records.map(record => Number(record.rating)).filter(Boolean);
   const average = ratings.length ? (ratings.reduce((sum, value) => sum + value, 0) / ratings.length).toFixed(1) : "—";
+  $("#journal-overview").classList.toggle("show-average", showAverageRating);
   $("#journal-overview").innerHTML = `
     <article class="metric"><span>ALL RECORDS</span><strong>${records.length}<small>件の記録</small></strong></article>
     <article class="metric"><span>THIS MONTH</span><strong>${monthly}<small>冊を記録</small></strong></article>
-    <article class="metric"><span>AVERAGE</span><strong>${average}<small>/ 5</small></strong></article>
+    ${showAverageRating ? `<article class="metric"><span>AVERAGE</span><strong>${average}<small>/ 5</small></strong></article>` : ""}
   `;
+  $("#toggle-average-rating").textContent = showAverageRating ? "平均評価を隠す" : "平均評価も表示";
   $("#journal-timeline").innerHTML = records.length ? records.map(record => {
     const book = bookById(record.bookId);
     const enriched = book ? enrichBookFromCatalog(book) : null;
@@ -915,7 +1035,7 @@ function saveBook(event) {
     addActivity("book-created", `『${book.title}』を本棚に追加`);
   }
   saveState();
-  closeModal();
+  closeModal(true);
   renderAll();
   showToast(existing ? "本の情報を更新しました。" : "本棚に一冊追加しました。");
 }
@@ -977,7 +1097,7 @@ function deleteCurrentBook() {
   state.books = state.books.filter(item => item.id !== id);
   addActivity("book-deleted", `『${book.title}』を本棚から削除`);
   saveState();
-  closeModal();
+  closeModal(true);
   renderAll();
   showToast("本棚から削除しました。記録の履歴は残っています。");
 }
@@ -993,12 +1113,11 @@ function prepareRecordForm(bookId = "", record = null) {
   $("#record-author").value = enriched?.author || "";
   $("#record-date").value = record?.date || isoDate();
   $("#record-status").value = record?.status || "read";
-  $("#record-rating").value = record?.rating || "4";
+  $("#record-rating").value = record?.rating ? String(record.rating) : "";
   $("#record-tone").value = record?.tone || "";
   $("#record-note").value = record?.note || "";
   $("#record-modal-title").textContent = record ? "読書記録を編集する" : "読書の記録を残す";
   $("#delete-record").hidden = !record;
-  renderRecordSuggestions();
   openModal("record-modal");
 }
 
@@ -1007,7 +1126,7 @@ function prepareRecordFromCatalog(catalogBook) {
   $("#record-catalog-id").value = catalogBook.id;
   $("#record-title").value = catalogBook.title;
   $("#record-author").value = catalogBook.author;
-  renderRecordSuggestions();
+  refreshModalInitialState();
 }
 
 function saveRecord(event) {
@@ -1044,7 +1163,7 @@ function saveRecord(event) {
   book.updatedAt = new Date().toISOString();
   addActivity(existingRecordId ? "record-updated" : "record-created", `『${book.title}』の読書記録を保存`);
   saveState();
-  closeModal();
+  closeModal(true);
   renderAll();
   showToast(existingRecordId ? "読書記録を更新しました。" : "読書記録を保存しました。");
 }
@@ -1059,20 +1178,9 @@ function deleteRecord(id = $("#record-id").value) {
   state.records = state.records.filter(item => item.id !== id);
   addActivity("record-deleted", `${label}を削除`);
   saveState();
-  closeModal();
+  closeModal(true);
   renderAll();
   showToast("読書記録を削除しました。");
-}
-
-function renderRecordSuggestions() {
-  const query = `${$("#record-title").value} ${$("#record-author").value}`.trim();
-  const results = query ? searchBooks(query, { limit: 5 }) : BOOK_CATALOG.slice(0, 4);
-  $("#record-suggestions").innerHTML = results.map(book => `
-    <button type="button" data-action="pick-record-book" data-id="${book.id}" data-source="${book.source || "catalog"}">
-      <strong>${escapeHtml(book.title)}</strong>
-      <span>${escapeHtml(book.author)}${book.publishedYear ? ` / ${book.publishedYear}` : ""}</span>
-    </button>
-  `).join("");
 }
 
 function prepareReviewForm(review = null, bookId = "") {
@@ -1117,7 +1225,7 @@ function saveReview(event) {
     addActivity("review-created", `『${book?.title || "本"}』のレビューを投稿`);
   }
   saveState();
-  closeModal();
+  closeModal(true);
   renderAll();
   openView("reviews");
   showToast(existing ? "レビューを更新しました。" : "レビューを送信し、履歴に保存しました。");
@@ -1163,6 +1271,36 @@ function saveSuggestedBook(book) {
   showToast("「読みたい本」に追加しました。");
 }
 
+function markSuggestedAsRead(book) {
+  if (!book) return;
+  let libraryBook = bookById(book.id) || findDuplicateByTitleAuthor(book.title, book.author);
+  if (!libraryBook) {
+    libraryBook = {
+      id: uid("book"),
+      catalogId: BOOK_CATALOG.some(item => item.id === book.id) ? book.id : "",
+      title: book.title,
+      author: book.author,
+      genre: book.genre || "小説",
+      isbn: book.isbn13 || "",
+      status: "read",
+      pages: 0,
+      progress: 0,
+      tone: book.tone || "",
+      color: book.color || COLORS[state.books.length % COLORS.length],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    state.books.unshift(libraryBook);
+  } else {
+    libraryBook.status = "read";
+    libraryBook.updatedAt = new Date().toISOString();
+  }
+  addActivity("book-status-updated", `『${libraryBook.title}』を「読了」に変更`);
+  saveState();
+  renderAll();
+  showToast(`『${libraryBook.title}』を読了済みにしました。`);
+}
+
 function updateBookStatus(id, status) {
   const book = bookById(id);
   if (!book) return;
@@ -1205,6 +1343,7 @@ function selectMood(mood) {
 function chooseFortuneBook(mood) {
   const excludeOwned = $("#fortune-exclude-owned")?.checked;
   const catalogCandidates = BOOK_CATALOG
+    .filter(book => normalize(book.author) !== normalize("村上春樹"))
     .filter(book => !book.tones?.length || book.tones.includes(mood))
     .map(book => ({
       ...book,
@@ -1213,6 +1352,7 @@ function chooseFortuneBook(mood) {
       color: COLORS[Math.abs(book.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % COLORS.length]
     }));
   const candidates = [...catalogCandidates, ...recommendationPool, ...newBooks]
+    .filter(book => normalize(book.author) !== normalize("村上春樹"))
     .filter(book => !book.tone || book.tone.includes(mood));
   const visibleCandidates = excludeOwned
     ? candidates.filter(book => !findDuplicate(book.title))
@@ -1239,6 +1379,7 @@ function drawFortune() {
       <p>${escapeHtml(currentFortuneBook.reason || currentFortuneBook.description)}</p>
       <div class="fortune-actions">
         <button class="primary-button" data-action="fortune-save">${owned ? "本棚にあります ✓" : "読みたい本へ ＋"}</button>
+        <button class="text-button subtle-check ${owned?.status === "read" ? "checked" : ""}" data-action="fortune-read">${owned?.status === "read" ? "読了済み ✓" : "読んだことがある"}</button>
         <button class="text-button" data-action="draw-again">もう一度引く</button>
       </div>
     </div>
@@ -1260,6 +1401,11 @@ function handleAction(target) {
   if (action === "add-book") prepareBookForm();
   if (action === "record-new") prepareRecordForm();
   if (action === "view-journal") openView("journal");
+  if (action === "toggle-average-rating") {
+    showAverageRating = !showAverageRating;
+    localStorage.setItem(JOURNAL_AVERAGE_KEY, String(showAverageRating));
+    renderJournal();
+  }
   if (action === "edit-book") prepareBookForm(bookById(id));
   if (action === "quick-status") {
     const book = bookById(id);
@@ -1269,6 +1415,30 @@ function handleAction(target) {
   if (action === "mark-wishlist") updateBookStatus(id, "wishlist");
   if (action === "save-new") saveSuggestedBook(newBooks[Number(index)]);
   if (action === "recommendation") saveSuggestedBook(recommendationPool[Number(index)]);
+  if (action === "mark-recommendation-read") markSuggestedAsRead(recommendationPool[Number(index)]);
+  if (action === "open-catalog-detail") openCatalogDetail(bookById(id) || catalogById(id));
+  if (action === "detail-record") {
+    const libraryBook = bookById(id);
+    const catalogBook = catalogById(id);
+    if (libraryBook) prepareRecordForm(libraryBook.id);
+    else if (catalogBook) prepareRecordFromCatalog(catalogBook);
+  }
+  if (action === "detail-wishlist") {
+    const libraryBook = bookById(id);
+    const catalogBook = catalogById(id);
+    if (libraryBook) openExistingBook(libraryBook);
+    else if (catalogBook) {
+      saveSuggestedBook(catalogBook);
+      closeModal(true);
+    }
+  }
+  if (action === "detail-read") {
+    const book = bookById(id) || catalogById(id);
+    if (book) {
+      markSuggestedAsRead(book);
+      closeModal(true);
+    }
+  }
   if (action === "record-catalog") {
     const book = catalogById(id);
     if (book) prepareRecordFromCatalog(book);
@@ -1287,17 +1457,7 @@ function handleAction(target) {
       renderCatalogResults($("#catalog-search").value);
     }
   }
-  if (action === "pick-record-book") {
-    const book = actionTarget.dataset.source === "library" ? bookById(id) : catalogById(id);
-    if (book) {
-      const enriched = enrichBookFromCatalog(book);
-      $("#record-book-id").value = actionTarget.dataset.source === "library" ? book.id : "";
-      $("#record-catalog-id").value = actionTarget.dataset.source === "catalog" ? book.id : (book.catalogId || "");
-      $("#record-title").value = enriched.title || "";
-      $("#record-author").value = enriched.author || "";
-      renderRecordSuggestions();
-    }
-  }
+  if (action === "mark-catalog-read") markSuggestedAsRead(bookById(id) || catalogById(id));
   if (action === "edit-record") {
     const record = state.records.find(item => item.id === id);
     if (record) prepareRecordForm(record.bookId, record);
@@ -1311,7 +1471,11 @@ function handleAction(target) {
   }
   if (action === "fortune-save" && currentFortuneBook) {
     saveSuggestedBook(currentFortuneBook);
-    closeModal();
+    closeModal(true);
+  }
+  if (action === "fortune-read" && currentFortuneBook) {
+    markSuggestedAsRead(currentFortuneBook);
+    closeModal(true);
   }
   if (action === "draw-again") {
     drawFortune();
@@ -1325,11 +1489,11 @@ $("#hero-add-record").addEventListener("click", () => prepareRecordForm());
 $("#journal-add-record").addEventListener("click", () => prepareRecordForm());
 $("#open-review").addEventListener("click", () => prepareReviewForm());
 $("#open-mood").addEventListener("click", prepareFortune);
-$("#auth-button").addEventListener("click", () => {
+$$('[data-open-auth]').forEach(button => button.addEventListener("click", () => {
   updateAuthUi();
   openModal("auth-modal");
-});
-$$("[data-close-modal]").forEach(button => button.addEventListener("click", closeModal));
+}));
+$$("[data-close-modal]").forEach(button => button.addEventListener("click", () => closeModal()));
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" && $("#modal-layer").classList.contains("open")) closeModal();
 });
@@ -1348,11 +1512,9 @@ $("#library-search").addEventListener("input", renderLibrary);
 $("#catalog-search").addEventListener("input", event => renderCatalogResults(event.target.value));
 $("#record-title").addEventListener("input", () => {
   $("#record-catalog-id").value = "";
-  renderRecordSuggestions();
 });
 $("#record-author").addEventListener("input", () => {
   $("#record-catalog-id").value = "";
-  renderRecordSuggestions();
 });
 $("#library-filters").addEventListener("click", event => {
   const button = event.target.closest("[data-filter]");
@@ -1364,6 +1526,10 @@ $("#library-filters").addEventListener("click", event => {
 $("#refresh-recommendations").addEventListener("click", () => {
   recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
   renderRecommendations();
+});
+$("#refresh-catalog-discovery").addEventListener("click", () => {
+  catalogDiscoveryOffset += 3;
+  renderCatalogResults("");
 });
 $("#duplicate-form").addEventListener("submit", event => {
   event.preventDefault();
@@ -1389,7 +1555,8 @@ $("#back-to-moods").addEventListener("click", () => {
 });
 window.addEventListener("popstate", () => {
   if ($("#modal-layer").classList.contains("open")) {
-    closeModal();
+    const closed = closeModal();
+    if (!closed) history.pushState({ view: activeView }, "", `#${activeView || "home"}`);
     return;
   }
   const view = ["home", "library", "journal", "reviews"].includes(location.hash.slice(1))

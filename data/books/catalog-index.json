@@ -4,5 +4,23 @@
     "label": "Japanese fiction",
     "path": "./data/books/japanese-fiction.json",
     "version": "2026-06-demo"
+  },
+  {
+    "id": "japanese-contemporary",
+    "label": "Japanese contemporary fiction",
+    "path": "./data/books/japanese-contemporary.json",
+    "version": "2026-06-17"
+  },
+  {
+    "id": "japanese-classics",
+    "label": "Japanese modern classics",
+    "path": "./data/books/japanese-classics.json",
+    "version": "2026-06-17"
+  },
+  {
+    "id": "world-fiction",
+    "label": "World fiction in Japanese",
+    "path": "./data/books/world-fiction.json",
+    "version": "2026-06-17"
   }
 ]

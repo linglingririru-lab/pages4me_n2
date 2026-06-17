@@ -297,6 +297,15 @@ img { display: block; max-width: 100%; }
   color: var(--ink);
   font-size: 12px;
 }
+.catalog-discovery-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin: 8px 0 18px;
+}
+.catalog-discovery-heading div { display: grid; gap: 4px; }
+.catalog-discovery-heading small { color: #8a97a2; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
+.catalog-discovery-heading strong { font: 500 15px "Shippori Mincho", serif; }
 .catalog-results { display: grid; border-top: 1px solid var(--line); }
 .catalog-item {
   display: grid;
@@ -308,6 +317,20 @@ img { display: block; max-width: 100%; }
 }
 .catalog-item h3 { margin: 0 0 5px; font: 500 17px "Shippori Mincho", serif; }
 .catalog-item span { color: #71808c; font-size: 9px; }
+.catalog-book-main {
+  display: block;
+  width: 100%;
+  padding: 8px 12px 8px 0;
+  text-align: left;
+  transition: color .2s ease, transform .2s ease;
+}
+.catalog-book-main:hover { color: #566777; transform: translateY(-2px); }
+.catalog-book-main h3::after {
+  margin-left: 10px;
+  color: #98a4ae;
+  font: 400 10px "DM Mono", monospace;
+  content: "↗";
+}
 .catalog-actions { display: flex; gap: 12px; }
 .catalog-actions button {
   min-width: 82px;
@@ -320,6 +343,17 @@ img { display: block; max-width: 100%; }
   color: #6f7387;
   border-color: #b6bbc8;
 }
+.catalog-actions .subtle-check,
+.recommend-read-check {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(126,141,154,.28);
+  border-radius: 999px;
+  color: #71808c;
+  font-size: 8px;
+}
+.catalog-actions .subtle-check.checked,
+.recommend-read-check.checked { background: rgba(220,228,234,.7); color: #536372; }
 .book-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
 .book-card {
   position: relative;
@@ -327,6 +361,7 @@ img { display: block; max-width: 100%; }
   padding: 0;
   text-align: left;
 }
+.book-card-main { display: block; width: 100%; padding: 0; text-align: left; }
 .book-cover {
   position: relative;
   display: flex;
@@ -351,10 +386,11 @@ img { display: block; max-width: 100%; }
   transform: rotate(25deg);
 }
 .book-cover strong { position: relative; z-index: 1; font: 500 22px/1.55 "Shippori Mincho", serif; letter-spacing: .04em; }
-.book-card > p { margin: 17px 0 5px; color: #87929c; font: 500 7px "DM Mono", monospace; letter-spacing: .12em; }
+.book-card-main > p { margin: 17px 0 5px; color: #87929c; font: 500 7px "DM Mono", monospace; letter-spacing: .12em; }
 .book-card h3 { margin: 0; font: 500 17px "Shippori Mincho", serif; }
-.book-card > span { color: #89939c; font-size: 9px; }
+.book-card-main > span { color: #89939c; font-size: 9px; }
 .book-card .reason { display: block; margin-top: 13px; color: #6f7b86; font-size: 9px; line-height: 1.8; }
+.recommend-read-check { margin-top: 15px; }
 .book-card .owned-mark {
   position: absolute;
   top: 12px;
@@ -367,6 +403,27 @@ img { display: block; max-width: 100%; }
   font: 500 7px "DM Mono", monospace;
   backdrop-filter: blur(8px);
 }
+.catalog-detail-modal { width: min(760px, calc(100vw - 32px)); }
+.catalog-detail-heading { padding: 14px 4px 32px; border-bottom: 1px solid var(--line); }
+.catalog-detail-heading > span { color: #84919c; font-size: 9px; }
+.catalog-detail-heading h2 { margin: 14px 0 7px; font: 500 clamp(28px, 4vw, 44px)/1.45 "Shippori Mincho", serif; }
+.catalog-detail-heading p { margin: 0; color: #667582; font-size: 11px; }
+.catalog-detail-actions { display: grid; grid-template-columns: repeat(3, 1fr); }
+.catalog-detail-actions button {
+  display: flex;
+  min-height: 170px;
+  padding: 26px 22px;
+  flex-direction: column;
+  align-items: flex-start;
+  border-right: 1px solid var(--line);
+  text-align: left;
+  transition: background .2s ease;
+}
+.catalog-detail-actions button:last-child { border-right: 0; }
+.catalog-detail-actions button:hover { background: rgba(222,229,235,.35); }
+.catalog-detail-actions small { color: #8996a1; font: 500 7px "DM Mono", monospace; letter-spacing: .12em; }
+.catalog-detail-actions strong { margin: 24px 0 8px; font: 500 15px "Shippori Mincho", serif; }
+.catalog-detail-actions span { color: #788590; font-size: 9px; line-height: 1.8; }
 .new-list { display: grid; border-top: 1px solid var(--line); }
 .new-item {
   display: grid;
@@ -393,6 +450,19 @@ img { display: block; max-width: 100%; }
 .page-heading .eyebrow { margin-bottom: 15px; }
 .page-heading h1 { font-size: clamp(40px, 4.5vw, 62px); }
 .page-heading p:last-child { margin: 17px 0 0; color: var(--muted); font-size: 10px; }
+.sync-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin: 38px 0;
+  padding: 24px 27px;
+  border: 1px solid rgba(113,129,142,.22);
+  background: rgba(240,244,247,.65);
+}
+.sync-panel span { color: #8a97a2; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
+.sync-panel h2 { margin: 7px 0 4px; font: 500 18px "Shippori Mincho", serif; }
+.sync-panel p { margin: 0; color: #74818c; font-size: 9px; line-height: 1.8; }
 .library-tools { display: flex; align-items: center; justify-content: space-between; gap: 30px; }
 .search-box {
   display: flex;
@@ -497,6 +567,9 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--line);
   background: rgba(255,255,255,.34);
 }
+.journal-overview:not(.show-average) { grid-template-columns: repeat(2, 1fr); }
+.journal-display-options { display: flex; justify-content: flex-end; margin: -65px 0 70px; }
+.journal-display-options .text-button { color: #73818d; }
 .metric { min-height: 150px; padding: 30px; border-right: 1px solid var(--line); }
 .metric:last-child { border-right: 0; }
 .metric span { color: #88949e; font: 500 8px "DM Mono", monospace; letter-spacing: .12em; }
@@ -609,54 +682,64 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   border: 1px solid rgba(255,255,255,.7);
   background: rgba(245,247,249,.96);
   box-shadow: var(--shadow);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(116,132,145,.48) rgba(223,230,235,.52);
 }
+.modal::-webkit-scrollbar, #draw-select-step::-webkit-scrollbar { width: 7px; }
+.modal::-webkit-scrollbar-track, #draw-select-step::-webkit-scrollbar-track { background: rgba(223,230,235,.52); }
+.modal::-webkit-scrollbar-thumb, #draw-select-step::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(239,243,246,.72);
+  border-radius: 999px;
+  background: rgba(116,132,145,.48);
+}
+.modal::-webkit-scrollbar-thumb:hover, #draw-select-step::-webkit-scrollbar-thumb:hover { background: rgba(88,105,120,.68); }
 .modal.active { display: block; animation: modal-in .35s ease both; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .modal-close { position: absolute; top: 20px; right: 22px; color: #84909a; font-size: 18px; font-weight: 200; }
 .modal h2 { margin: 0 0 34px; font: 500 30px "Shippori Mincho", serif; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 19px; }
-.form-grid label { color: #697682; font-size: 8px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 20px; }
+.form-grid label { color: #536271; font-size: 10px; font-weight: 500; }
 .form-grid .wide { grid-column: 1 / -1; }
 .form-grid input, .form-grid select, .form-grid textarea {
   display: block;
   width: 100%;
-  margin-top: 8px;
-  padding: 11px 0;
-  border: 0;
-  border-bottom: 1px solid #bdc6cd;
-  border-radius: 0;
+  min-height: 46px;
+  margin-top: 9px;
+  padding: 12px 14px;
+  border: 1px solid #bbc6cf;
+  border-radius: 2px;
   outline: 0;
-  background: transparent;
+  background: rgba(255,255,255,.52);
   color: var(--ink);
-  font-size: 10px;
+  font-size: 14px;
 }
-.form-grid textarea { padding: 12px; border: 1px solid #c8d0d7; resize: vertical; line-height: 1.8; }
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
+  border-color: #718393;
+  background: rgba(255,255,255,.8);
+  box-shadow: 0 0 0 3px rgba(119,139,155,.08);
+}
+.form-grid textarea { min-height: 120px; resize: vertical; line-height: 1.8; }
+.form-section-label {
+  margin: 0 0 -8px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(117,133,146,.2);
+  color: #657584;
+  font: 500 11px "Shippori Mincho", serif;
+}
+.form-section-label.optional-label { margin-top: 12px; color: #7e8b96; }
+.important-field input { min-height: 52px; font: 500 17px "Shippori Mincho", serif; }
+.required-mark { margin-left: 6px; color: #87949f; font-size: 8px; font-weight: 400; }
 .checkbox-label { display: flex; align-items: center; gap: 9px; }
 .checkbox-label input { display: inline; width: auto; margin: 0; }
 .auth-copy { margin: -14px 0 30px; color: #75828d; font-size: 10px; line-height: 2; }
 .form-warning { margin-top: 18px; padding: 12px 14px; border: 1px solid #c6c3d1; background: #ecebf1; color: #67677d; font-size: 9px; }
-.form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 25px; margin-top: 35px; }
+.form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 25px; margin-top: 35px; padding-top: 18px; border-top: 1px solid rgba(117,133,146,.18); }
 .danger-button { margin-right: auto; color: #8a6f76; border-color: #c7b5ba; }
-.record-suggestions {
-  display: grid;
-  margin-top: 20px;
-  border-top: 1px solid var(--line);
-}
-.record-suggestions button {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-  color: #596774;
-  text-align: left;
-}
-.record-suggestions strong { font: 500 13px "Shippori Mincho", serif; }
-.record-suggestions span { color: #7f8b95; font-size: 8px; }
 .draw-modal {
   width: 100%;
   max-width: none;
   height: 100vh;
+  height: 100dvh;
   max-height: none;
   padding: 0;
   overflow: hidden;
@@ -818,11 +901,13 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   gap: 14px;
   min-width: 210px;
   padding: 14px 18px 15px;
-  border-top: 1px solid rgba(89,105,121,.34);
-  border-bottom: 1px solid rgba(89,105,121,.34);
-  color: #4f6070;
+  border: 1px solid rgba(68,84,99,.5);
+  border-radius: 999px;
+  background: rgba(247,249,250,.75);
+  color: #3f5161;
   font-size: 10px;
   letter-spacing: .12em;
+  box-shadow: 0 9px 30px rgba(75,90,103,.1);
   transition: color .25s ease, border-color .25s ease, transform .25s ease;
 }
 .draw-fortune-button:hover {
@@ -837,7 +922,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   border-radius: 50%;
   opacity: .62;
 }
-.draw-ready-copy > small { margin-top: 17px; color: #8b969f; font-size: 7px; }
+.draw-ready-copy > small { margin-top: 17px; color: #687985; font-size: 8px; }
 .draw-window.drawing .draw-ready-copy, .draw-window.revealed .draw-ready-copy {
   opacity: 0;
   transform: translateY(-8px);
@@ -934,8 +1019,24 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
     grid-template-columns: 1fr auto;
     backdrop-filter: none;
   }
-  .site-header nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 50; justify-content: space-around; height: 58px; border-top: 1px solid var(--line); background: rgba(244,246,248,.96); backdrop-filter: blur(18px); }
-  .site-header nav button { flex: 1; justify-content: center; border-radius: 0; }
+  .site-header nav {
+    position: fixed;
+    right: 20px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 20px;
+    z-index: 50;
+    justify-content: space-around;
+    height: 56px;
+    padding: 6px;
+    gap: 5px;
+    border: 1px solid rgba(98,114,127,.2);
+    border-radius: 18px;
+    background: rgba(244,246,248,.94);
+    box-shadow: 0 12px 35px rgba(58,73,87,.14);
+    backdrop-filter: blur(18px);
+  }
+  .site-header nav button { flex: 1; justify-content: center; min-width: 0; padding: 0 5px; border-radius: 13px; font-size: 9px; }
+  .site-header nav button.active { border-color: rgba(115,131,143,.24); background: rgba(255,255,255,.78); }
   .quiet-button { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; }
   .hero-copy { min-height: 570px; padding: 80px 8vw 60px; }
@@ -944,6 +1045,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .status-card { border-right: 0; border-bottom: 1px solid var(--line); }
   .catalog-item { grid-template-columns: 1fr; gap: 12px; }
   .catalog-actions { justify-content: flex-start; }
+  .sync-panel { align-items: flex-start; flex-direction: column; }
   .book-grid { grid-template-columns: repeat(2, 1fr); }
   .shelf-grid { grid-template-columns: repeat(3, 1fr); }
   .journal-layout, .review-layout { grid-template-columns: 1fr; }
@@ -952,11 +1054,13 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .draw-step-copy { max-width: 600px; }
   .mood-options { width: 100%; }
   .fortune-result { width: min(680px, 88vw); }
-  footer { margin-bottom: 58px; }
+  footer { margin-bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 
 @media (max-width: 640px) {
   .site-header { height: 64px; padding: 0 20px; }
+  .site-header nav { right: 18px; left: 18px; height: 58px; padding: 6px; gap: 4px; }
+  .site-header nav button { padding: 0 2px; font-size: 8.5px; letter-spacing: -.02em; white-space: nowrap; }
   .brand small { display: none; }
   .hero-copy { min-height: 520px; padding: 60px 24px 45px; }
   .hero h1 { font-size: 42px; }
@@ -971,19 +1075,42 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .status-card { padding: 34px 10px; }
   .recommend-section, .new-section, .catalog-section, .inner-view { padding: 75px 24px 90px; }
   .section-heading, .page-heading { align-items: start; flex-direction: column; gap: 24px; }
+  .catalog-discovery-heading { align-items: center; }
+  .catalog-actions { flex-wrap: wrap; gap: 8px 12px; }
+  .catalog-actions button { min-height: 38px; padding: 9px 10px; font-size: 9px; }
   .book-grid { grid-template-columns: 1fr; gap: 42px; }
   .new-item { grid-template-columns: 45px 1fr auto; gap: 15px; }
   .new-item > p { display: none; }
   .library-tools { align-items: stretch; flex-direction: column; }
   .shelf-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 14px; }
   .journal-overview { grid-template-columns: 1fr; }
+  .journal-overview:not(.show-average) { grid-template-columns: 1fr; }
+  .journal-display-options { margin: -66px 0 60px; }
   .metric { min-height: 120px; border-right: 0; border-bottom: 1px solid var(--line); }
   .timeline-item { grid-template-columns: 70px 1fr; padding-left: 20px; }
   .modal-layer { padding: 0; }
-  .modal { width: 100%; max-height: 100vh; min-height: 100vh; padding: 56px 24px 80px; }
+  .modal { width: 100%; max-height: 100dvh; min-height: 100dvh; padding: 56px 22px 110px; }
+  .catalog-detail-actions { grid-template-columns: 1fr; }
+  .catalog-detail-actions button { min-height: 112px; padding: 20px 8px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .catalog-detail-actions strong { margin: 12px 0 5px; }
   .draw-modal { padding: 0; }
   .form-grid, .mood-options { grid-template-columns: 1fr; }
   .form-grid .wide { grid-column: auto; }
+  .form-grid { gap: 23px; }
+  .form-grid label { font-size: 11px; }
+  .form-grid input, .form-grid select, .form-grid textarea { min-height: 50px; padding: 13px 14px; font-size: 16px; }
+  .important-field input { min-height: 56px; font-size: 18px; }
+  .form-section-label { margin-top: 4px; font-size: 12px; }
+  .form-actions {
+    position: sticky;
+    z-index: 3;
+    bottom: -110px;
+    margin: 35px -22px -110px;
+    padding: 18px 22px calc(22px + env(safe-area-inset-bottom));
+    background: rgba(245,247,249,.94);
+    backdrop-filter: blur(12px);
+  }
+  .form-actions .primary-button { min-height: 48px; }
   .draw-close { top: 20px; right: 20px; }
   .draw-close span { display: none; }
   .draw-brand { top: 20px; left: 20px; }
@@ -993,7 +1120,9 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .mood-options button { min-height: 76px; padding: 17px; }
   .draw-mark { width: 70vw; }
   .draw-ready-copy { padding: 0 24px; }
-  .draw-ready-copy h2 { font-size: 39px; }
+  .draw-ready-copy h2 { font-size: clamp(31px, 9.2vw, 37px); line-height: 1.48; }
+  .draw-fortune-button { min-width: 238px; min-height: 50px; font-size: 11px; }
+  .draw-ready-copy > small { max-width: 260px; font-size: 9px; line-height: 1.7; }
   .fortune-result {
     width: calc(100vw - 34px);
     padding: 26px;
@@ -1003,7 +1132,8 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .fortune-copy h3 { font-size: 25px; }
   .fortune-copy > p { margin: 13px 0; font-size: 8px; }
   .fortune-actions { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .record-suggestions button { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .sync-panel { margin: 30px 0; padding: 22px; }
+  .sync-panel .primary-button { width: 100%; justify-content: space-between; }
   .back-to-moods { bottom: 74px; left: 20px; }
   footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 15px; padding: 30px 24px; }
   footer p { margin: 0; }

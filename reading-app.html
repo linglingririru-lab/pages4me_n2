@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260617-1" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260617-3" />
   </head>
   <body>
     <header class="site-header">
@@ -24,7 +24,7 @@
         <small>YOHaku</small>
       </button>
       <nav aria-label="メインナビゲーション">
-        <button class="nav-link active" data-view="home">記録する</button>
+        <button class="nav-link active" data-view="home">ホーム</button>
         <button class="nav-link" data-view="library">本棚</button>
         <button class="nav-link" data-view="journal">読書記録</button>
         <button class="nav-link" data-view="reviews">レビュー</button>
@@ -32,7 +32,6 @@
       <button class="quiet-button" id="open-add-book">
         本棚に追加 <span>＋</span>
       </button>
-      <button class="quiet-button auth-button" id="auth-button">同期ログイン</button>
     </header>
 
     <main>
@@ -63,7 +62,7 @@
             />
             <figcaption>
               <span>BOOKS LEAVE A QUIET TRACE</span>
-              <p>読み終えた時間も、<br />選ばなかった本も。</p>
+              <p>読んだ本を残して、<br />次の一冊を見つける。</p>
             </figcaption>
           </figure>
         </section>
@@ -125,6 +124,13 @@
               autocomplete="off"
             />
           </label>
+          <div class="catalog-discovery-heading">
+            <div>
+              <small>MONTHLY SHELF</small>
+              <strong id="catalog-discovery-title">今月の棚</strong>
+            </div>
+            <button class="text-button" id="refresh-catalog-discovery">棚を入れ替える ↻</button>
+          </div>
           <div class="catalog-results" id="catalog-results"></div>
         </section>
 
@@ -133,6 +139,7 @@
             <div>
               <p class="eyebrow">SELECTED FROM REAL BOOKS</p>
               <h2>少し外側から、三冊。</h2>
+              <p class="section-lead">本の棚から、毎月三冊を入れ替えます。</p>
             </div>
             <button class="text-button" id="refresh-recommendations">選び直す ↻</button>
           </div>
@@ -145,7 +152,7 @@
               <p class="eyebrow">NEW ARRIVALS / JUNE 2026</p>
               <h2>気になる新刊</h2>
             </div>
-            <p class="section-note">実際に刊行予定・刊行済みの本から、静かな候補を置いています。</p>
+            <p class="section-note">今月発売される本から、気になる四冊を紹介します。</p>
           </div>
           <div class="new-list" id="new-book-list"></div>
         </section>
@@ -173,6 +180,14 @@
             <button data-filter="wishlist">読みたい本</button>
           </div>
         </div>
+        <section class="sync-panel">
+          <div>
+            <span>CONTINUE ON ANOTHER DEVICE</span>
+            <h2>ほかの端末でも、同じ本棚を。</h2>
+            <p>メールでログインすると、スマホやPCから同じ読書記録を続けられます。</p>
+          </div>
+          <button class="primary-button" data-open-auth>端末間の同期を設定 <span>→</span></button>
+        </section>
         <div class="library-summary" id="library-summary"></div>
         <div class="shelf-grid" id="library-list"></div>
         <div class="empty-state" id="library-empty" hidden>
@@ -192,6 +207,9 @@
           <button class="primary-button" id="journal-add-record">記録をつける <span>＋</span></button>
         </header>
         <section class="journal-overview" id="journal-overview"></section>
+        <div class="journal-display-options">
+          <button class="text-button" id="toggle-average-rating" data-action="toggle-average-rating">平均評価も表示</button>
+        </div>
         <div class="journal-layout">
           <section>
             <div class="subheading">
@@ -242,7 +260,7 @@
     <footer>
       <button class="brand nav-link" data-view="home"><i></i><span>余白</span><small>YOHaku</small></button>
       <p>読んだ記憶から、まだ知らない一冊へ。</p>
-      <span id="sync-status">DATA STAYS IN THIS BROWSER</span>
+      <span id="sync-status">この端末に保存されています</span>
     </footer>
 
     <div class="modal-layer" id="modal-layer" aria-hidden="true">
@@ -285,6 +303,12 @@
         </form>
       </section>
 
+      <section class="modal catalog-detail-modal" id="catalog-detail-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title">
+        <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
+        <p class="eyebrow">BOOK DETAILS</p>
+        <div id="catalog-detail-content"></div>
+      </section>
+
       <section class="modal" id="record-modal" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
         <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
         <p class="eyebrow">LEAVE AN AFTERIMAGE</p>
@@ -293,9 +317,10 @@
           <input type="hidden" id="record-id" />
           <input type="hidden" id="record-book-id" />
           <input type="hidden" id="record-catalog-id" />
-          <div class="form-grid">
-            <label class="wide">タイトル（必須）<input id="record-title" required autocomplete="off" /></label>
-            <label>作者（必須）<input id="record-author" required autocomplete="off" /></label>
+          <div class="form-grid record-form-grid">
+            <p class="form-section-label wide">まずは、この二つだけ</p>
+            <label class="wide important-field">タイトル <span class="required-mark">必須</span><input id="record-title" required autocomplete="off" /></label>
+            <label class="wide important-field">作者 <span class="required-mark">必須</span><input id="record-author" required autocomplete="off" /></label>
             <label>読んだ日（あとから直せます）<input id="record-date" type="date" required /></label>
             <label>この記録の状態
               <select id="record-status">
@@ -304,10 +329,12 @@
                 <option value="owned">今日はここまで</option>
               </select>
             </label>
-            <label>評価
+            <p class="form-section-label wide optional-label">ここから下は、入れたいときだけ</p>
+            <label>評価（任意）
               <select id="record-rating">
+                <option value="" selected>評価しない</option>
                 <option value="5">5 — 忘れたくない</option>
-                <option value="4" selected>4 — とてもよかった</option>
+                <option value="4">4 — とてもよかった</option>
                 <option value="3">3 — よかった</option>
                 <option value="2">2 — 少し合わなかった</option>
                 <option value="1">1 — 合わなかった</option>
@@ -316,7 +343,6 @@
             <label>読後の印象<input id="record-tone" placeholder="静けさが残る" /></label>
             <label class="wide">ひとことメモ<textarea id="record-note" rows="4" placeholder="最後の数ページだけ、温度が違った。"></textarea></label>
           </div>
-          <div class="record-suggestions" id="record-suggestions"></div>
           <div class="form-actions">
             <button type="button" class="text-button danger-button" id="delete-record" hidden>この記録を削除</button>
             <button type="submit" class="primary-button">記録を保存 <span>→</span></button>
@@ -355,10 +381,10 @@
 
       <section class="modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
         <button class="modal-close" data-close-modal aria-label="閉じる">×</button>
-        <p class="eyebrow">SYNC YOUR LIBRARY</p>
-        <h2 id="auth-modal-title">読書記録を同期する</h2>
+        <p class="eyebrow">CONTINUE ON ANOTHER DEVICE</p>
+        <h2 id="auth-modal-title">ほかの端末でも続きを。</h2>
         <form id="auth-form">
-          <p class="auth-copy">メールに届くリンクからログインすると、本棚・読書記録・レビュー履歴をあなたのDBに保存します。</p>
+          <p class="auth-copy">メールに届くリンクからログインすると、スマホやPCで同じ本棚・読書記録・レビュー履歴を使えます。</p>
           <div class="form-grid">
             <label class="wide">メールアドレス<input id="auth-email" type="email" autocomplete="email" required /></label>
           </div>
@@ -425,8 +451,8 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./data/books/japanese-fiction.js?v=20260617-1"></script>
-    <script src="./supabase-config.js?v=20260617-1"></script>
-    <script src="./reading-app.js?v=20260617-1"></script>
+    <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
+    <script src="./supabase-config.js?v=20260617-3"></script>
+    <script src="./reading-app.js?v=20260617-3"></script>
   </body>
 </html>

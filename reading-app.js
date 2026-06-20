@@ -1,8 +1,8 @@
 const STORAGE_KEY = "yohaku-reading-app-v1";
 const AUTH_SESSION_KEY = "yohaku-reading-auth-session-v1";
 const JOURNAL_AVERAGE_KEY = "yohaku-show-average-rating";
-const CATALOG_VERSION = "2026-06-demo";
-const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260617-3";
+const CATALOG_VERSION = "2026-06-20";
+const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260620-2";
 const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-3";
 let BOOK_CATALOG = [];
 let activeView = "";
@@ -38,16 +38,18 @@ const newBooks = [
     date: "2026-06-05",
     tone: "緊張 物語",
     description: "2026年6月刊行の単行本。大きな物語をゆっくり追いたい日に。",
-    color: "#d5dce1"
+    color: "#d5dce1",
+    sourceUrl: "https://www.shogakukan.co.jp/pr/fire_dome/"
   },
   {
-    title: "わたしを庇わないで",
-    author: "石田夏穂",
+    title: "永遠と横道世之介 上",
+    author: "吉田修一",
     genre: "小説",
-    date: "2026-06-05",
-    tone: "現代 鋭い",
-    description: "2026年6月刊行の単行本。言葉の角度が気になる人へ。",
-    color: "#c8d2dc"
+    date: "2026-06-10",
+    tone: "日常 余韻",
+    description: "2026年6月刊行の文庫。日々の時間をゆっくり辿りたい日に。",
+    color: "#c8d2dc",
+    sourceUrl: "https://books.bunshun.jp/ud/book/num/9784167925154"
   },
   {
     title: "怪談小説という名の小説怪談",
@@ -56,7 +58,8 @@ const newBooks = [
     date: "2026-06-16",
     tone: "不穏 怪談",
     description: "角川ホラー文庫の6月新刊。静かな怖さを読みたい夜に。",
-    color: "#cfd0dc"
+    color: "#cfd0dc",
+    sourceUrl: "https://www.kadokawa.co.jp/product/322601000711/"
   },
   {
     title: "三鬼",
@@ -65,7 +68,8 @@ const newBooks = [
     date: "2026-06-25",
     tone: "文学 余韻",
     description: "講談社の6月文芸単行本。少し重心の低い小説を探す日に。",
-    color: "#d8dee2"
+    color: "#d8dee2",
+    sourceUrl: "https://www.kodansha.co.jp/book/products/0000427491"
   }
 ];
 
@@ -176,6 +180,7 @@ let state = loadState();
 let currentFilter = "all";
 let recommendationOffset = 0;
 let catalogDiscoveryOffset = 0;
+let discoveryMode = "chance";
 let modalInitialFormState = "";
 let toastTimer;
 let selectedMood = "";
@@ -484,11 +489,15 @@ function memoryRecommendedBooks(limit = 3) {
   return distinctAuthors(ordered, limit);
 }
 
-function discoveryBookMarkup(book, variant) {
+function discoveryBookMarkup(book, variant = "", editorial = false) {
   if (!book) return "";
   const category = CATEGORY_LABELS[book.category] || book.category || "小説";
+  const action = editorial ? "open-recommendation-detail" : "open-catalog-detail";
+  const identity = editorial
+    ? `data-index="${recommendationPool.indexOf(book)}"`
+    : `data-id="${book.id}"`;
   return `
-    <button class="discovery-book ${variant}" data-action="open-catalog-detail" data-id="${book.id}">
+    <button class="discovery-book ${variant}" data-action="${action}" ${identity}>
       <small>${escapeHtml(category)}</small>
       <strong>${escapeHtml(book.title)}</strong>
       <span>${escapeHtml(book.author)}</span>
@@ -497,14 +506,46 @@ function discoveryBookMarkup(book, variant) {
   `;
 }
 
-function renderDiscoveryPair() {
-  const randomBook = chanceBook();
-  const memoryBooks = memoryRecommendedBooks(3);
-  $("#chance-book").innerHTML = discoveryBookMarkup(randomBook, "chance-book-main");
-  $("#memory-book-list").innerHTML = memoryBooks.map(book => discoveryBookMarkup(book, "memory-book-item")).join("");
-  $("#memory-recommendation-note").textContent = state.records.length
-    ? "読書記録で多い分類を手がかりに、著者が重ならない三冊を選びました。"
-    : "記録が増えるまでは、棚全体から著者が重ならない三冊を選びます。";
+function renderDiscoveryHub() {
+  const monthlyBooks = distinctAuthors(
+    monthlyOrder(recommendationPool.filter(book => normalize(book.author) !== normalize("村上春樹")), recommendationOffset),
+    3
+  );
+  const modes = {
+    chance: {
+      label: "BY CHANCE",
+      title: "思いがけない本から",
+      description: "棚全体から、まだ登録していない本を選びます。",
+      books: [chanceBook()],
+      editorial: false
+    },
+    memory: {
+      label: "FROM YOUR RECORDS",
+      title: "これまでの記録を手がかりに",
+      description: state.records.length
+        ? "読書記録で多い分類をもとに、著者が重ならない本を選びました。"
+        : "記録が増えるまでは、棚全体から著者が重ならない本を選びます。",
+      books: memoryRecommendedBooks(3),
+      editorial: false
+    },
+    monthly: {
+      label: "MONTHLY SELECTION",
+      title: "いつもの棚から少し外へ",
+      description: "新しさだけに寄せず、今月手に取りたい本を選んでいます。",
+      books: monthlyBooks,
+      editorial: true
+    }
+  };
+  const selected = modes[discoveryMode] || modes.chance;
+  $("#discovery-mode-label").textContent = selected.label;
+  $("#discovery-mode-title").textContent = selected.title;
+  $("#discovery-mode-description").textContent = selected.description;
+  $("#refresh-catalog-discovery").hidden = discoveryMode === "memory";
+  $("#discovery-book-list").classList.toggle("single", selected.books.length === 1);
+  $("#discovery-book-list").innerHTML = selected.books
+    .map(book => discoveryBookMarkup(book, selected.books.length === 1 ? "featured" : "", selected.editorial))
+    .join("");
+  $$("[data-discovery-mode]").forEach(button => button.classList.toggle("active", button.dataset.discoveryMode === discoveryMode));
 }
 
 function distinctAuthors(items, limit) {
@@ -572,6 +613,7 @@ function enrichBookFromCatalog(book) {
 function searchableText(book) {
   return normalize([
     book.title,
+    book.titleKana,
     book.author,
     book.authorKana,
     book.isbn,
@@ -757,8 +799,7 @@ function renderHome() {
     <div class="empty-copy"><h2>まだ記録はありません。</h2><p>読み終えた本を一冊入れると、ここに最近の記録が出ます。</p></div>
   `;
 
-  renderRecommendations();
-  renderDiscoveryPair();
+  renderDiscoveryHub();
   $("#new-book-list").innerHTML = newBooks.map((book, index) => {
     const owned = findDuplicate(book.title);
     return `
@@ -797,29 +838,6 @@ function renderCatalogResults(query = "") {
       </article>
     `;
   }).join("") : `<div class="empty-state compact-empty"><h2>近い本は見つかりませんでした。</h2><p>タイトルと作者を少し短くして探してください。</p></div>`;
-}
-
-function renderRecommendations() {
-  const ordered = monthlyOrder(recommendationPool.filter(book => normalize(book.author) !== normalize("村上春樹")), recommendationOffset);
-  const recommendations = distinctAuthors(ordered, 3);
-  $("#recommendation-list").innerHTML = recommendations.map((book, index) => {
-    const owned = findDuplicate(book.title);
-    return `
-      <article class="book-card">
-        <button class="book-card-main" data-action="open-recommendation-detail" data-index="${recommendationPool.indexOf(book)}">
-          <div class="book-cover" style="--cover:${book.color}">
-          ${owned ? `<span class="owned-mark">${canUndoShelfAdd(owned) ? "本棚登録を取り消せます" : "IN YOUR SHELF"}</span>` : ""}
-            <strong>${escapeHtml(book.title)}</strong>
-          </div>
-          <p>0${index + 1} / ${escapeHtml(book.genre.toUpperCase())}</p>
-          <h3>${escapeHtml(book.title)}</h3>
-          <span>${escapeHtml(book.author)}</span>
-          <small class="reason">${escapeHtml(book.reason)}</small>
-        </button>
-        <span class="book-card-open">選び方を見る ↗</span>
-      </article>
-    `;
-  }).join("");
 }
 
 function openCatalogDetail(book) {
@@ -1722,14 +1740,15 @@ $("#library-filters").addEventListener("click", event => {
   $$("#library-filters button").forEach(item => item.classList.toggle("active", item === button));
   renderLibrary();
 });
-$("#refresh-recommendations").addEventListener("click", () => {
-  recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
-  renderRecommendations();
-});
 $("#refresh-catalog-discovery").addEventListener("click", () => {
-  catalogDiscoveryOffset += 1;
-  renderDiscoveryPair();
+  if (discoveryMode === "monthly") recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
+  else catalogDiscoveryOffset += 1;
+  renderDiscoveryHub();
 });
+$$('[data-discovery-mode]').forEach(button => button.addEventListener("click", () => {
+  discoveryMode = button.dataset.discoveryMode;
+  renderDiscoveryHub();
+}));
 $("#duplicate-form").addEventListener("submit", event => {
   event.preventDefault();
   const query = $("#duplicate-query").value.trim();

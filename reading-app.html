@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260618-1" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260620-2" />
   </head>
   <body>
     <header class="site-header">
@@ -62,23 +62,12 @@
             />
             <figcaption>
               <span>BOOKS LEAVE A QUIET TRACE</span>
-              <p>読んだ本を残して、<br />次の一冊を見つける。</p>
+              <p>記録が、次の一冊を選ぶ<br />手がかりになる。</p>
             </figcaption>
           </figure>
         </section>
 
         <section class="today-grid">
-          <article class="status-card quick-record-card">
-            <p class="card-label">QUICK RECORD</p>
-            <div>
-              <h2>読んだ本を残す</h2>
-              <p>タイトルと作者だけで記録できます。日付は今日で入ります。</p>
-            </div>
-            <button class="primary-button" data-action="record-new">
-              記録をつける <span>→</span>
-            </button>
-          </article>
-
           <article class="status-card note-card">
             <p class="card-label">RECENT RECORD</p>
             <div id="last-note-content"></div>
@@ -109,42 +98,30 @@
         <section class="catalog-section" id="catalog-search-section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">CHANCE & MEMORY</p>
-              <h2>本と出会う</h2>
-              <p class="section-lead">偶然から一冊。これまでの記録から、もう三冊。</p>
+              <p class="eyebrow">FIND YOUR NEXT BOOK</p>
+              <h2>次に読む本を探す</h2>
+              <p class="section-lead">今の自分に合う選び方を、ひとつ選んでください。</p>
             </div>
-            <p class="section-note">蔵書を広げながら、選び方も少しずつ育てていきます。</p>
+            <p class="section-note">本を開くと、気になる・読みたい・読了をその場で選べます。</p>
           </div>
           <label class="catalog-search-box" hidden><input id="catalog-search" type="search" /></label>
-          <div class="discovery-pair">
-            <article class="chance-discovery">
-              <div class="discovery-title-row">
-                <div><small>BY CHANCE</small><h3>偶然から、一冊。</h3></div>
-                <button class="text-button" id="refresh-catalog-discovery">別の一冊を見る ↻</button>
+          <div class="discovery-switch" id="discovery-switch" aria-label="本の選び方">
+            <button class="active" data-discovery-mode="chance">偶然にまかせる</button>
+            <button data-discovery-mode="memory">記録から選ぶ</button>
+            <button data-discovery-mode="monthly">今月の選書</button>
+          </div>
+          <div class="discovery-stage">
+            <div class="discovery-stage-heading">
+              <div>
+                <small id="discovery-mode-label">BY CHANCE</small>
+                <h3 id="discovery-mode-title">思いがけない本から</h3>
+                <p id="discovery-mode-description">棚全体から、まだ登録していない本を選びます。</p>
               </div>
-              <div id="chance-book"></div>
-            </article>
-            <article class="memory-discovery">
-              <div class="discovery-title-row">
-                <div><small>FROM YOUR RECORDS</small><h3>記録から、三冊。</h3></div>
-              </div>
-              <p id="memory-recommendation-note">記録が増えると、選び方も少しずつ変わります。</p>
-              <div id="memory-book-list"></div>
-            </article>
+              <button class="text-button" id="refresh-catalog-discovery">選び直す ↻</button>
+            </div>
+            <div class="discovery-book-list" id="discovery-book-list"></div>
           </div>
           <div class="catalog-results" id="catalog-results" hidden></div>
-        </section>
-
-        <section class="recommend-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">SELECTED FROM REAL BOOKS</p>
-              <h2>少し外側から、三冊。</h2>
-              <p class="section-lead">本の棚から、毎月三冊を入れ替えます。</p>
-            </div>
-            <button class="text-button" id="refresh-recommendations">選び直す ↻</button>
-          </div>
-          <div class="book-grid" id="recommendation-list"></div>
         </section>
 
         <section class="new-section">
@@ -461,6 +438,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260618-1"></script>
+    <script src="./reading-app.js?v=20260620-2"></script>
   </body>
 </html>

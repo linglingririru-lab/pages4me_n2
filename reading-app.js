@@ -4,6 +4,7 @@ const JOURNAL_AVERAGE_KEY = "yohaku-show-average-rating";
 const CATALOG_VERSION = "2026-06-20";
 const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260620-2";
 const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-3";
+const NEW_ARRIVALS_URL = "./data/books/new-arrivals.json";
 let BOOK_CATALOG = [];
 let activeView = "";
 let remoteSyncReady = false;
@@ -30,7 +31,7 @@ const CATEGORY_LABELS = {
 
 const COLORS = ["#dbe1e6", "#d2d9e1", "#c9d1dc", "#dddde5", "#cfd9dc", "#e0e3e6"];
 
-const newBooks = [
+let newBooks = [
   {
     title: "ファイア・ドーム 上",
     author: "辻村深月",
@@ -72,6 +73,7 @@ const newBooks = [
     sourceUrl: "https://www.kodansha.co.jp/book/products/0000427491"
   }
 ];
+let newBooksMonth = "2026-06";
 
 const recommendationPool = [
   {
@@ -593,7 +595,7 @@ function formatDate(value, includeTime = false) {
 
 function stars(rating) {
   const value = Number(rating) || 0;
-  if (!value) return "評価なし";
+  if (!value) return "評価未入力";
   return `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
 }
 
@@ -800,17 +802,30 @@ function renderHome() {
   `;
 
   renderDiscoveryHub();
+  const [arrivalYear, arrivalMonth] = newBooksMonth.split("-").map(Number);
+  if (arrivalYear && arrivalMonth) {
+    $("#new-arrivals-eyebrow").textContent = `NEW ARRIVALS / ${String(arrivalMonth).padStart(2, "0")} ${arrivalYear}`;
+    $("#new-arrivals-note").textContent = `${arrivalMonth}月刊行の本から、気になる四冊を紹介します。`;
+  }
   $("#new-book-list").innerHTML = newBooks.map((book, index) => {
     const owned = findDuplicate(book.title);
     return `
       <article class="new-item">
         <div class="new-cover" style="--cover:${book.color}"></div>
-        <div><h3>${escapeHtml(book.title)}</h3><span>${formatDate(book.date)} 発売 / ${escapeHtml(book.author)}</span></div>
+        <div><h3>${escapeHtml(book.title)}</h3><span>${formatPublicationDate(book.date)} / ${escapeHtml(book.author)}</span></div>
         <p>${escapeHtml(book.description)}</p>
         <button data-action="save-new" data-index="${index}">${shelfShortcutLabel(owned, "気になる本へ ＋")}</button>
       </article>
     `;
   }).join("");
+}
+
+function formatPublicationDate(value) {
+  if (/^\d{4}-\d{2}$/.test(value || "")) {
+    const [year, month] = value.split("-").map(Number);
+    return `${year}年${month}月刊行`;
+  }
+  return `${formatDate(value)} 発売`;
 }
 
 function renderCatalogResults(query = "") {
@@ -1817,9 +1832,26 @@ async function loadCatalog() {
   await loadCatalogFromSupabase();
 }
 
+async function loadNewArrivals() {
+  if (!window.fetch) return;
+  try {
+    const response = await fetch(NEW_ARRIVALS_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    const verifiedBooks = Array.isArray(payload.books)
+      ? payload.books.filter(book => book?.verified === true && book.title && book.author && book.sourceUrl)
+      : [];
+    if (verifiedBooks.length < 4) throw new Error("verified books are fewer than four");
+    newBooks = verifiedBooks.slice(0, 4);
+    if (/^\d{4}-\d{2}$/.test(payload.month || "")) newBooksMonth = payload.month;
+  } catch (error) {
+    console.info("新刊データを読み込めなかったため、確認済みの内蔵データを使います。", error);
+  }
+}
+
 async function initApp() {
   parseAuthCallback();
-  await loadCatalog();
+  await Promise.all([loadCatalog(), loadNewArrivals()]);
   const remoteState = await loadRemoteState();
   if (remoteState) {
     state = migrateState(remoteState);

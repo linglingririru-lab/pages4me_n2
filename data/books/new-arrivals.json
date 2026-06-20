@@ -1,0 +1,56 @@
+{
+  "month": "2026-06",
+  "updatedAt": "2026-06-20T00:00:00Z",
+  "source": "出版社公式・国立国会図書館サーチ",
+  "sourceUrl": "https://ndlsearch.ndl.go.jp/",
+  "books": [
+    {
+      "title": "ファイア・ドーム 上",
+      "author": "辻村深月",
+      "genre": "小説",
+      "date": "2026-06-05",
+      "tone": "緊張 物語",
+      "description": "2026年6月刊行の単行本。大きな物語をゆっくり追いたい日に。",
+      "color": "#d5dce1",
+      "source": "小学館公式",
+      "sourceUrl": "https://www.shogakukan.co.jp/pr/fire_dome/",
+      "verified": true
+    },
+    {
+      "title": "永遠と横道世之介 上",
+      "author": "吉田修一",
+      "genre": "小説",
+      "date": "2026-06-10",
+      "tone": "日常 余韻",
+      "description": "2026年6月刊行の文庫。日々の時間をゆっくり辿りたい日に。",
+      "color": "#c8d2dc",
+      "source": "文藝春秋公式",
+      "sourceUrl": "https://books.bunshun.jp/ud/book/num/9784167925154",
+      "verified": true
+    },
+    {
+      "title": "怪談小説という名の小説怪談",
+      "author": "澤村伊智",
+      "genre": "ホラー",
+      "date": "2026-06-16",
+      "tone": "不穏 怪談",
+      "description": "角川ホラー文庫の6月新刊。静かな怖さを読みたい夜に。",
+      "color": "#cfd0dc",
+      "source": "KADOKAWA公式",
+      "sourceUrl": "https://www.kadokawa.co.jp/product/322601000711/",
+      "verified": true
+    },
+    {
+      "title": "三鬼",
+      "author": "小林恭二",
+      "genre": "小説",
+      "date": "2026-06-25",
+      "tone": "文学 余韻",
+      "description": "講談社の6月文芸単行本。少し重心の低い小説を探す日に。",
+      "color": "#d8dee2",
+      "source": "講談社公式",
+      "sourceUrl": "https://www.kodansha.co.jp/book/products/0000427491",
+      "verified": true
+    }
+  ]
+}

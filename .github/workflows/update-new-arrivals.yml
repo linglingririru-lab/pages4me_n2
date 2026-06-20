@@ -1,0 +1,44 @@
+name: Update monthly new arrivals
+
+on:
+  schedule:
+    - cron: "15 0 5,8 * *"
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Target month (YYYY-MM); blank uses the current month in Japan"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Select verified new books
+        run: |
+          if [ -n "$TARGET_MONTH" ]; then
+            python scripts/update-new-arrivals.py --month "$TARGET_MONTH"
+          else
+            python scripts/update-new-arrivals.py
+          fi
+        env:
+          TARGET_MONTH: ${{ inputs.month }}
+      - name: Commit updated arrivals
+        run: |
+          if git diff --quiet -- data/books/new-arrivals.json; then
+            echo "New-arrivals data is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/books/new-arrivals.json
+          git commit -m "Update monthly new arrivals"
+          git push

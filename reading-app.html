@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260620-2" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260620-3" />
   </head>
   <body>
     <header class="site-header">
@@ -127,10 +127,10 @@
         <section class="new-section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">NEW ARRIVALS / JUNE 2026</p>
+              <p class="eyebrow" id="new-arrivals-eyebrow">NEW ARRIVALS / 06 2026</p>
               <h2>気になる新刊</h2>
             </div>
-            <p class="section-note">今月発売される本から、気になる四冊を紹介します。</p>
+            <p class="section-note" id="new-arrivals-note">6月刊行の本から、気になる四冊を紹介します。</p>
           </div>
           <div class="new-list" id="new-book-list"></div>
         </section>
@@ -245,7 +245,10 @@
     <footer>
       <button class="brand nav-link" data-view="home"><i></i><span>余白</span><small>YOHaku</small></button>
       <p>読んだ記憶から、まだ知らない一冊へ。</p>
-      <span id="sync-status">この端末に保存されています</span>
+      <div class="footer-meta">
+        <span id="sync-status">この端末に保存されています</span>
+        <a class="metadata-credit" href="https://ndlsearch.ndl.go.jp/" target="_blank" rel="noreferrer">新刊書誌：国立国会図書館サーチAPI</a>
+      </div>
     </footer>
 
     <div class="modal-layer" id="modal-layer" aria-hidden="true">
@@ -317,7 +320,7 @@
             <p class="form-section-label wide optional-label">ここから下は、入れたいときだけ</p>
             <label>評価（任意）
               <select id="record-rating">
-                <option value="" selected>評価しない</option>
+                <option value="" selected>評価は未入力</option>
                 <option value="5">5 — 忘れたくない</option>
                 <option value="4">4 — とてもよかった</option>
                 <option value="3">3 — よかった</option>
@@ -438,6 +441,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260620-2"></script>
+    <script src="./reading-app.js?v=20260620-3"></script>
   </body>
 </html>

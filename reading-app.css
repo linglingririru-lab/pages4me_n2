@@ -740,7 +740,10 @@ footer {
   background: #e8edf1;
 }
 footer p { color: #77838d; font: 400 12px "Shippori Mincho", serif; }
-footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
+.footer-meta { display: grid; justify-items: end; gap: 8px; }
+.footer-meta > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
+.metadata-credit { color: #929ca5; font-size: 7px; letter-spacing: .08em; text-decoration: none; }
+.metadata-credit:hover { color: #697781; }
 
 .modal-layer { position: fixed; z-index: 100; inset: 0; display: none; place-items: center; padding: 28px; }
 .modal-layer.open { display: grid; }
@@ -1263,6 +1266,7 @@ footer > span { color: #929ca5; font: 500 7px "DM Mono", monospace; letter-spaci
   .back-to-moods { bottom: 74px; left: 20px; }
   footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 15px; padding: 30px 24px; }
   footer p { margin: 0; }
+  .footer-meta { justify-items: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

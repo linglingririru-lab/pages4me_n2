@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260621-4" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260621-5" />
   </head>
   <body>
     <header class="site-header">
@@ -183,7 +183,10 @@
             <h1>読書記録</h1>
             <p>読み終えた日、評価、ひとことメモをあとから編集できます。</p>
           </div>
-          <button class="primary-button" id="journal-add-record">記録をつける <span>＋</span></button>
+          <div class="page-heading-actions">
+            <button class="backup-records-button" id="export-reading-data">記録をバックアップ</button>
+            <button class="primary-button" id="journal-add-record">記録をつける <span>＋</span></button>
+          </div>
         </header>
         <section class="journal-overview" id="journal-overview"></section>
         <div class="journal-display-options">
@@ -441,6 +444,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260621-1"></script>
+    <script src="./reading-app.js?v=20260621-2"></script>
   </body>
 </html>

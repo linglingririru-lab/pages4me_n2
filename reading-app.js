@@ -199,6 +199,40 @@ function saveState() {
   queueRemoteSync();
 }
 
+async function exportReadingData() {
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = `yohaku-reading-backup-${date}.json`;
+  const payload = JSON.stringify({
+    type: "yohaku-reading-backup",
+    exportedAt: new Date().toISOString(),
+    state
+  }, null, 2);
+  const file = new File([payload], filename, { type: "application/json" });
+
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: "余白の読書記録バックアップ",
+        files: [file]
+      });
+      showToast("読書記録のバックアップを共有しました。");
+    } catch (error) {
+      if (error?.name !== "AbortError") showToast("バックアップを共有できませんでした。");
+    }
+    return;
+  }
+
+  const url = URL.createObjectURL(file);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("読書記録のバックアップを保存しました。");
+}
+
 function supabaseConfig() {
   const config = window.YOHAKU_SUPABASE || {};
   return {
@@ -1719,6 +1753,7 @@ $("#open-add-book").addEventListener("click", () => prepareBookForm());
 $("#library-add-book").addEventListener("click", () => prepareBookForm());
 $("#hero-add-record").addEventListener("click", () => prepareRecordForm());
 $("#journal-add-record").addEventListener("click", () => prepareRecordForm());
+$("#export-reading-data").addEventListener("click", exportReadingData);
 $("#open-review").addEventListener("click", () => prepareReviewForm());
 $("#open-mood").addEventListener("click", prepareFortune);
 $$('[data-open-auth]').forEach(button => button.addEventListener("click", () => {

@@ -536,6 +536,7 @@ img { display: block; max-width: 100%; }
 .sync-panel h2 { margin: 7px 0 4px; font: 500 18px "Shippori Mincho", serif; }
 .sync-panel p { margin: 0; color: #74818c; font-size: 9px; line-height: 1.8; }
 .library-sync-panel { margin-top: 72px; }
+.sync-actions { display: grid; justify-items: end; gap: 12px; }
 .journal-sync-link { display: none; }
 .library-tools { display: flex; align-items: center; justify-content: space-between; gap: 30px; }
 .search-box {
@@ -1157,6 +1158,7 @@ footer p { color: #77838d; font: 400 12px "Shippori Mincho", serif; }
   .catalog-item { grid-template-columns: 1fr; gap: 12px; }
   .catalog-actions { justify-content: flex-start; }
   .sync-panel { align-items: flex-start; flex-direction: column; }
+  .sync-actions { width: 100%; justify-items: stretch; }
   .discovery-pair { grid-template-columns: 1fr; }
   .chance-discovery { padding-right: 0; }
   .memory-discovery { padding: 34px 0 38px; border-top: 1px solid var(--line); border-left: 0; }

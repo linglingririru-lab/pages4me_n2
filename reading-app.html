@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260620-3" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260621-1" />
   </head>
   <body>
     <header class="site-header">
@@ -172,7 +172,10 @@
             <h2>ほかの端末でも、同じ本棚を。</h2>
             <p>メールでログインすると、スマホやPCから同じ読書記録を続けられます。</p>
           </div>
-          <button class="primary-button" data-open-auth>端末間の同期を設定 <span>→</span></button>
+          <div class="sync-actions">
+            <button class="primary-button" data-open-auth>端末間の同期を設定 <span>→</span></button>
+            <a class="text-button" href="./reading-recovery.html">この端末の記録を確認・復元</a>
+          </div>
         </section>
       </section>
 
@@ -441,6 +444,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260620-3"></script>
+    <script src="./reading-app.js?v=20260621-1"></script>
   </body>
 </html>

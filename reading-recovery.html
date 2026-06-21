@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e8edf1" />
+    <title>読書記録の復元確認 | 余白</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --ink:#344451; --soft:#71808c; --line:#cbd4db; --paper:#edf1f4; --panel:rgba(255,255,255,.28); }
+      * { box-sizing:border-box; }
+      body { min-height:100vh; margin:0; color:var(--ink); background:linear-gradient(145deg,#f3f5f7 0%,#e1e8ed 58%,#d9e1e7 100%); font-family:"Noto Sans JP",sans-serif; font-weight:300; }
+      main { width:min(760px,calc(100% - 36px)); margin:0 auto; padding:clamp(55px,10vw,110px) 0; }
+      .brand { display:inline-flex; align-items:center; gap:11px; margin-bottom:65px; color:var(--ink); text-decoration:none; }
+      .brand i { width:17px; height:25px; border:1px solid #91a0ac; border-radius:9px 9px 5px 5px; transform:rotate(-5deg); }
+      .brand span { font:500 25px "Shippori Mincho",serif; }
+      .eyebrow { margin:0 0 16px; color:#8996a0; font:500 8px "DM Mono",monospace; letter-spacing:.18em; }
+      h1 { margin:0; font:500 clamp(32px,7vw,56px) "Shippori Mincho",serif; line-height:1.35; }
+      .lead { max-width:570px; margin:24px 0 42px; color:var(--soft); font-size:12px; line-height:2; }
+      .panel { padding:clamp(25px,6vw,45px); border:1px solid var(--line); background:var(--panel); backdrop-filter:blur(18px); }
+      .status { padding-bottom:30px; border-bottom:1px solid var(--line); }
+      .status strong { display:block; margin:7px 0 12px; font:500 25px "Shippori Mincho",serif; }
+      .status p,.notice { margin:0; color:var(--soft); font-size:11px; line-height:1.9; }
+      .counts { display:grid; grid-template-columns:repeat(3,1fr); margin:30px 0; border:1px solid var(--line); }
+      .counts div { padding:18px; border-right:1px solid var(--line); }
+      .counts div:last-child { border-right:0; }
+      .counts b { display:block; font:500 22px "DM Mono",monospace; }
+      .counts small { color:var(--soft); font-size:9px; }
+      .titles { margin:0 0 30px; padding:0; list-style:none; }
+      .titles li { padding:11px 0; border-bottom:1px solid rgba(154,168,178,.35); font:400 13px "Shippori Mincho",serif; }
+      .actions { display:flex; flex-wrap:wrap; gap:10px; }
+      button,.file-label,.back { min-height:44px; padding:0 18px; border:1px solid #aebbc5; border-radius:999px; color:var(--ink); background:rgba(255,255,255,.24); font:400 10px "Noto Sans JP",sans-serif; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; }
+      button:disabled { opacity:.4; cursor:default; }
+      input[type=file] { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+      .notice { margin-top:26px; }
+      .privacy { margin-top:35px; color:#8b98a2; font-size:9px; line-height:1.8; }
+      @media (max-width:560px) { .counts div { padding:14px 10px; } .actions>* { width:100%; justify-content:center; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="./reading-app.html#home"><i></i><span>余白</span></a>
+      <p class="eyebrow">LOCAL RECORD RECOVERY</p>
+      <h1>この端末に、<br />記録が残っているか。</h1>
+      <p class="lead">記録をつけたときと同じiPhone・同じブラウザで開いてください。確認と書き出しは、この端末の中だけで行われます。</p>
+
+      <section class="panel">
+        <div class="status">
+          <small id="origin-label"></small>
+          <strong id="status-title">保存内容を確認しています</strong>
+          <p id="status-copy"></p>
+        </div>
+        <div class="counts">
+          <div><b id="book-count">0</b><small>本棚</small></div>
+          <div><b id="record-count">0</b><small>読書記録</small></div>
+          <div><b id="review-count">0</b><small>レビュー</small></div>
+        </div>
+        <ul class="titles" id="book-titles"></ul>
+        <div class="actions">
+          <button id="export-button" type="button">バックアップを書き出す</button>
+          <label class="file-label" for="import-file">バックアップから統合復元</label>
+          <input id="import-file" type="file" accept="application/json,.json" />
+          <a class="back" href="./reading-app.html#home">読書アプリへ戻る</a>
+        </div>
+        <p class="notice" id="result-message"></p>
+      </section>
+      <p class="privacy">このページは記録を外部へ送信しません。復元操作では、現在の記録を残したままバックアップ内容を追加します。</p>
+    </main>
+
+    <script>
+      const STORAGE_KEY = "yohaku-reading-app-v1";
+      const $ = selector => document.querySelector(selector);
+
+      function readState() {
+        try {
+          const value = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          return value && Array.isArray(value.books) && Array.isArray(value.records) && Array.isArray(value.reviews) ? value : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function render() {
+        const state = readState();
+        $("#origin-label").textContent = location.origin;
+        $("#export-button").disabled = !state;
+        $("#book-count").textContent = state?.books.length || 0;
+        $("#record-count").textContent = state?.records.length || 0;
+        $("#review-count").textContent = state?.reviews.length || 0;
+        $("#book-titles").innerHTML = (state?.books || []).slice(0, 20).map(book => `<li>${escapeHtml(book.title || "タイトル未設定")} / ${escapeHtml(book.author || "著者未設定")}</li>`).join("");
+        if (state && (state.books.length || state.records.length || state.reviews.length)) {
+          $("#status-title").textContent = "このブラウザに記録が残っています";
+          $("#status-copy").textContent = "先にバックアップを書き出してから、読書アプリへ戻ってください。";
+        } else {
+          $("#status-title").textContent = "このブラウザには記録が見つかりません";
+          $("#status-copy").textContent = "Safari、Chrome、LINE内ブラウザなど、最初に記録したブラウザから同じページを開き直してください。";
+        }
+      }
+
+      function escapeHtml(value = "") {
+        return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+
+      function mergeById(current = [], incoming = []) {
+        const merged = new Map(current.map(item => [item.id, item]));
+        incoming.forEach(item => item?.id && merged.set(item.id, item));
+        return [...merged.values()];
+      }
+
+      $("#export-button").addEventListener("click", () => {
+        const state = readState();
+        if (!state) return;
+        const payload = { type: "yohaku-reading-backup", exportedAt: new Date().toISOString(), state };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `yohaku-reading-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      });
+
+      $("#import-file").addEventListener("change", async event => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+          const payload = JSON.parse(await file.text());
+          const incoming = payload.type === "yohaku-reading-backup" ? payload.state : payload;
+          if (!incoming || !Array.isArray(incoming.books) || !Array.isArray(incoming.records) || !Array.isArray(incoming.reviews)) throw new Error("invalid backup");
+          if (!window.confirm(`本棚${incoming.books.length}冊・読書記録${incoming.records.length}件を、この端末の記録へ統合しますか？`)) return;
+          const current = readState() || { version: 2, books: [], records: [], reviews: [], activity: [] };
+          const merged = {
+            ...current,
+            version: Math.max(2, Number(current.version) || 0, Number(incoming.version) || 0),
+            books: mergeById(current.books, incoming.books),
+            records: mergeById(current.records, incoming.records),
+            reviews: mergeById(current.reviews, incoming.reviews),
+            activity: mergeById(current.activity || [], incoming.activity || [])
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          $("#result-message").textContent = "復元しました。読書アプリへ戻ると反映されます。";
+          render();
+        } catch (error) {
+          $("#result-message").textContent = "このファイルは読書記録のバックアップとして読み込めませんでした。";
+        } finally {
+          event.target.value = "";
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

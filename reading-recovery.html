@@ -33,8 +33,7 @@
       button,.file-label,.back,.recovery-button { min-height:44px; padding:0 18px; border:1px solid #aebbc5; border-radius:999px; color:var(--ink); background:rgba(255,255,255,.24); font:400 10px "Noto Sans JP",sans-serif; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
       button:disabled { opacity:.4; cursor:default; }
       input[type=file] { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
-      .recovery-choices { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:32px; }
-      .recovery-choices.single { grid-template-columns:1fr; }
+      .recovery-choices { margin-top:32px; }
       .choice { padding:24px; border:1px solid var(--line); background:rgba(255,255,255,.16); }
       .choice-primary { background:rgba(255,255,255,.38); }
       .choice small { color:#82909b; font-size:8px; }
@@ -45,15 +44,16 @@
       .secondary-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
       .notice { margin-top:26px; }
       .privacy { margin-top:35px; color:#8b98a2; font-size:9px; line-height:1.8; }
-      @media (max-width:560px) { .counts div { padding:14px 10px; } .recovery-choices { grid-template-columns:1fr; } .choice h2,.choice p { min-height:0; } .secondary-actions>* { width:100%; } }
+      .restored-link { margin-top:16px; border-color:#8d9eaa; background:rgba(255,255,255,.5); }
+      @media (max-width:560px) { .counts div { padding:14px 10px; } .choice h2,.choice p { min-height:0; } .secondary-actions>* { width:100%; } }
     </style>
   </head>
   <body>
     <main>
       <a class="brand" href="./reading-app.html#home"><i></i><span>余白</span></a>
       <p class="eyebrow">LOCAL RECORD RECOVERY</p>
-      <h1>この端末に、<br />記録が残っているか。</h1>
-      <p class="lead">記録をつけたときと同じiPhone・同じブラウザで開いてください。本棚・読書記録・レビューをまとめて確認できます。</p>
+      <h1>保存した記録を、<br />この端末へ戻す。</h1>
+      <p class="lead">復元用に保存したファイルから、本棚・読書記録・レビューをまとめて戻します。現在の記録は消えません。</p>
 
       <section class="panel">
         <div class="status">
@@ -67,15 +67,9 @@
           <div><b id="review-count">0</b><small>レビュー</small></div>
         </div>
         <ul class="titles" id="book-titles"></ul>
-        <div class="recovery-choices" id="recovery-choices">
-          <section class="choice choice-primary" id="found-choice">
-            <small>記録が見つかったとき</small>
-            <h2>見つかった記録を、そのまま開く</h2>
-            <p>この端末には本棚と読書記録が残っています。まずはこちらから内容を確認してください。</p>
-            <a class="recovery-button" id="open-records-button" href="./reading-app.html#journal">読書記録をアプリで確認する</a>
-          </section>
-          <section class="choice">
-            <small>保存ファイルを持っているとき</small>
+        <div class="recovery-choices">
+          <section class="choice choice-primary">
+            <small>復元用ファイルを持っているとき</small>
             <h2>すべての記録を、この端末へ戻す</h2>
             <p>保存ファイルから、本棚・読書記録・レビューを現在の内容へまとめて追加します。</p>
             <label class="file-label" for="import-file">保存ファイルからまとめて復元</label>
@@ -83,10 +77,11 @@
           </section>
         </div>
         <div class="secondary-actions">
-          <button id="export-button" type="button">別の端末へ移すために保存</button>
+          <button id="export-button" type="button">この端末の記録を復元用に保存</button>
           <a class="back" href="./reading-app.html#home">読書アプリのホームへ</a>
         </div>
         <p class="notice" id="result-message"></p>
+        <a class="back restored-link" id="restored-link" href="./reading-app.html#journal" hidden>復元した読書記録を見る</a>
       </section>
       <p class="privacy">このページは記録を外部へ送信しません。復元操作では、現在の記録を残したままバックアップ内容を追加します。</p>
     </main>
@@ -106,18 +101,15 @@
 
       function render() {
         const state = readState();
-        const hasLocalRecords = Boolean(state && (state.books.length || state.records.length || state.reviews.length));
         $("#origin-label").textContent = location.origin;
         $("#export-button").disabled = !state;
-        $("#found-choice").hidden = !hasLocalRecords;
-        $("#recovery-choices").classList.toggle("single", !hasLocalRecords);
         $("#book-count").textContent = state?.books.length || 0;
         $("#record-count").textContent = state?.records.length || 0;
         $("#review-count").textContent = state?.reviews.length || 0;
         $("#book-titles").innerHTML = (state?.books || []).slice(0, 20).map(book => `<li>${escapeHtml(book.title || "タイトル未設定")} / ${escapeHtml(book.author || "著者未設定")}</li>`).join("");
-        if (hasLocalRecords) {
-          $("#status-title").textContent = "このブラウザに記録が残っています";
-          $("#status-copy").textContent = "本棚・読書記録・レビューが見つかりました。先に保存しておくと、別の端末にも戻せます。";
+        if (state && (state.books.length || state.records.length || state.reviews.length)) {
+          $("#status-title").textContent = "現在、この端末にある記録";
+          $("#status-copy").textContent = "復元ファイルの内容は、この記録へ追加されます。";
         } else {
           $("#status-title").textContent = "このブラウザには記録が見つかりません";
           $("#status-copy").textContent = "Safari、Chrome、LINE内ブラウザなど、最初に記録したブラウザから同じページを開き直してください。";
@@ -166,6 +158,7 @@
           };
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
           $("#result-message").textContent = "本棚・読書記録・レビューを復元しました。読書アプリへ戻ると反映されます。";
+          $("#restored-link").hidden = false;
           render();
         } catch (error) {
           $("#result-message").textContent = "このファイルは読書記録のバックアップとして読み込めませんでした。";

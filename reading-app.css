@@ -643,7 +643,7 @@ img { display: block; max-width: 100%; }
   background: rgba(255,255,255,.34);
 }
 .journal-overview:not(.show-average) { grid-template-columns: repeat(2, 1fr); }
-.journal-display-options { display: flex; justify-content: flex-end; margin: -65px 0 70px; }
+.journal-display-options { display: flex; justify-content: flex-end; gap: 22px; margin: -65px 0 70px; }
 .journal-display-options .text-button { color: #73818d; }
 .metric { min-height: 150px; padding: 30px; border-right: 1px solid var(--line); }
 .metric:last-child { border-right: 0; }

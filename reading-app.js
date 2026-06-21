@@ -200,8 +200,7 @@ function saveState() {
 }
 
 async function exportReadingData() {
-  const date = new Date().toISOString().slice(0, 10);
-  const filename = `yohaku-reading-backup-${date}.json`;
+  const filename = "yohaku-reading-backup.json";
   const payload = JSON.stringify({
     type: "yohaku-reading-backup",
     exportedAt: new Date().toISOString(),
@@ -215,7 +214,7 @@ async function exportReadingData() {
         title: "余白の読書記録バックアップ",
         files: [file]
       });
-      showToast("読書記録のバックアップを共有しました。");
+      showToast("同名ファイルがある場合は、置き換えて保存してください。");
     } catch (error) {
       if (error?.name !== "AbortError") showToast("バックアップを共有できませんでした。");
     }

@@ -182,7 +182,7 @@ let state = loadState();
 let currentFilter = "all";
 let recommendationOffset = 0;
 let catalogDiscoveryOffset = 0;
-let discoveryMode = "chance";
+let discoveryMode = "memory";
 let modalInitialFormState = "";
 let toastTimer;
 let selectedMood = "";
@@ -575,12 +575,25 @@ function renderDiscoveryHub() {
   $("#discovery-mode-label").textContent = selected.label;
   $("#discovery-mode-title").textContent = selected.title;
   $("#discovery-mode-description").textContent = selected.description;
+  const stage = $("#catalog-search-section .discovery-stage");
+  stage.classList.add("is-switching");
+  clearTimeout(renderDiscoveryHub.switchTimer);
+  renderDiscoveryHub.switchTimer = setTimeout(() => stage.classList.remove("is-switching"), 220);
   $("#refresh-catalog-discovery").hidden = discoveryMode === "memory";
+  $("#discovery-book-list").hidden = false;
   $("#discovery-book-list").classList.toggle("single", selected.books.length === 1);
   $("#discovery-book-list").innerHTML = selected.books
     .map(book => discoveryBookMarkup(book, selected.books.length === 1 ? "featured" : "", selected.editorial))
     .join("");
   $$("[data-discovery-mode]").forEach(button => button.classList.toggle("active", button.dataset.discoveryMode === discoveryMode));
+}
+
+function renderDuplicateCheck(query, resultElement) {
+  const match = findBestLibraryMatch(query);
+  resultElement.classList.toggle("found", Boolean(match));
+  resultElement.innerHTML = match
+    ? `本棚にあります：『${escapeHtml(enrichBookFromCatalog(match).title)}』 / ${STATUS_LABELS[match.status]}`
+    : "本棚には見つかりませんでした。読みたい本として登録できます。";
 }
 
 function distinctAuthors(items, limit) {
@@ -1790,8 +1803,7 @@ $("#library-filters").addEventListener("click", event => {
   renderLibrary();
 });
 $("#refresh-catalog-discovery").addEventListener("click", () => {
-  if (discoveryMode === "monthly") recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
-  else catalogDiscoveryOffset += 1;
+  catalogDiscoveryOffset += 1;
   renderDiscoveryHub();
 });
 $$('[data-discovery-mode]').forEach(button => button.addEventListener("click", () => {
@@ -1801,12 +1813,7 @@ $$('[data-discovery-mode]').forEach(button => button.addEventListener("click", (
 $("#duplicate-form").addEventListener("submit", event => {
   event.preventDefault();
   const query = $("#duplicate-query").value.trim();
-  const match = findBestLibraryMatch(query);
-  const result = $("#duplicate-result");
-  result.classList.toggle("found", Boolean(match));
-  result.innerHTML = match
-    ? `本棚にあります：『${escapeHtml(enrichBookFromCatalog(match).title)}』 / ${STATUS_LABELS[match.status]}`
-    : "本棚には見つかりませんでした。読みたい本として登録できます。";
+  renderDuplicateCheck(query, $("#duplicate-result"));
 });
 $("#mood-options").addEventListener("click", event => {
   const button = event.target.closest("[data-mood]");

@@ -191,10 +191,45 @@ img { display: block; max-width: 100%; }
 
 .today-grid {
   display: grid;
-  padding: 0 clamp(24px, 5vw, 76px);
+  padding: 24px clamp(24px, 5vw, 76px) 0;
   grid-template-columns: 1fr 1fr;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
+}
+.mood-entry-section {
+  padding: 34px clamp(24px, 5vw, 76px) 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,0) 72%),
+    rgba(247, 249, 251, .88);
+}
+.mood-entry-card {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  max-width: min(920px, 100%);
+  gap: 24px;
+  padding: 28px 30px 32px;
+  border: 1px solid rgba(112,126,138,.12);
+  border-radius: 28px;
+  background: rgba(252,253,253,.42);
+  box-shadow: 0 16px 42px rgba(104,118,130,.05);
+}
+.mood-entry-card h2 {
+  margin: 0 0 8px;
+  font: 500 24px "Shippori Mincho", serif;
+}
+.mood-entry-card p:last-child {
+  max-width: 520px;
+  margin: 0;
+  color: #74808b;
+  font-size: 10px;
+  line-height: 1.9;
+}
+.mood-entry-button {
+  flex: none;
+  align-self: center;
+  padding-right: 2px;
+  font-size: 9px;
 }
 .status-card {
   position: relative;
@@ -314,27 +349,71 @@ img { display: block; max-width: 100%; }
 .discovery-switch {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  gap: 12px;
 }
 .discovery-switch button {
-  min-height: 58px;
-  padding: 0 18px;
-  border-right: 1px solid var(--line);
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 78px;
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(112,126,138,.16);
+  border-radius: 18px;
+  background: rgba(255,255,255,.42);
   color: #788590;
-  font-size: 10px;
   text-align: left;
-  transition: background .2s ease, color .2s ease;
+  transition: transform .22s ease, background .22s ease, border-color .22s ease, box-shadow .22s ease, color .22s ease;
 }
-.discovery-switch button:last-child { border-right: 0; }
-.discovery-switch button.active { background: rgba(219,227,233,.38); color: #3f4f5d; }
-.discovery-stage { padding-top: 42px; }
-.discovery-stage-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 28px; }
+.discovery-switch button::after {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  width: 20px;
+  height: 1px;
+  background: rgba(119,132,144,.28);
+  content: "";
+  transition: width .22s ease, background .22s ease;
+}
+.discovery-switch button strong {
+  font: 500 15px/1.45 "Shippori Mincho", serif;
+  letter-spacing: -.02em;
+}
+.discovery-switch button small {
+  color: #8b97a1;
+  font: 400 8px/1.7 "Noto Sans JP", sans-serif;
+}
+.discovery-switch button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(112,126,138,.28);
+  background: rgba(255,255,255,.7);
+}
+.discovery-switch button.active {
+  border-color: rgba(94,109,122,.34);
+  background: linear-gradient(180deg, rgba(233,238,242,.94), rgba(241,244,247,.88));
+  box-shadow: 0 16px 34px rgba(93,107,120,.08);
+  color: #3f4f5d;
+}
+.discovery-switch button.active::after {
+  width: 34px;
+  background: rgba(87,101,114,.58);
+}
+.discovery-stage {
+  margin-top: 18px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(105,119,132,.14);
+  transition: opacity .24s ease, transform .24s ease;
+}
+.discovery-stage.is-switching {
+  opacity: .72;
+  transform: translateY(5px);
+}
+.discovery-stage-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 16px; }
 .discovery-stage-heading small { color: #8b97a1; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
 .discovery-stage-heading h3 { margin: 8px 0 5px; font: 500 clamp(25px, 3vw, 38px) "Shippori Mincho", serif; }
 .discovery-stage-heading p { margin: 0; color: #75828d; font-size: 9px; line-height: 1.8; }
 .discovery-book-list { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .discovery-book-list.single { grid-template-columns: 1fr; }
+.discovery-book-list[hidden] { display: none; }
 .discovery-book-list .discovery-book {
   min-height: 190px;
   padding: 28px 25px;
@@ -1187,15 +1266,41 @@ footer p { color: #77838d; font: 400 12px "Shippori Mincho", serif; }
     right: auto;
     left: 20px;
   }
-  .today-grid { padding: 0 20px; }
+  .today-grid {
+    padding: 18px 20px 0;
+  }
+  .mood-entry-section {
+    padding: 24px 20px 0;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0) 70%),
+      rgba(247, 249, 251, .9);
+  }
+  .mood-entry-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px 20px 24px;
+    border-radius: 22px;
+  }
+  .mood-entry-card h2 { font-size: 22px; }
+  .mood-entry-card p:last-child { font-size: 10px; }
+  .mood-entry-button { align-self: flex-start; }
   .status-card { padding: 34px 10px; }
   .recommend-section, .new-section, .catalog-section, .inner-view { padding: 75px 24px 90px; }
   .section-heading, .page-heading { align-items: start; flex-direction: column; gap: 24px; }
   .page-heading-actions { width: 100%; }
   .page-heading-actions > * { flex: 1; justify-content: center; }
   .catalog-discovery-heading { align-items: center; }
-  .discovery-switch button { min-height: 52px; padding: 0 8px; font-size: 8.5px; text-align: center; }
-  .discovery-stage { padding-top: 34px; }
+  .discovery-switch { gap: 8px; }
+  .discovery-switch button {
+    min-height: 76px;
+    padding: 15px 14px 14px;
+    border-radius: 15px;
+    text-align: left;
+  }
+  .discovery-switch button strong { font-size: 13px; }
+  .discovery-switch button small { font-size: 7px; }
+  .discovery-stage { margin-top: 14px; padding-top: 22px; }
   .discovery-stage-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .discovery-book-list, .discovery-book-list.single { grid-template-columns: 1fr; }
   .discovery-book-list .discovery-book { min-height: 132px; padding: 22px 18px; border-right: 0; border-bottom: 1px solid var(--line); }

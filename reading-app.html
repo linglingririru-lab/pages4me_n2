@@ -48,7 +48,6 @@
               <button class="primary-button" id="hero-add-record">
                 読んだ本を記録する <span>＋</span>
               </button>
-              <button class="text-button" id="open-mood">気分から一冊を選ぶ</button>
             </div>
             <button class="memory-line" data-action="view-journal">
               <span id="hero-read-count">0</span>
@@ -61,18 +60,27 @@
               alt="霜の降りた窓辺に静かに開かれた一冊の本"
             />
             <figcaption>
-              <span>BOOKS LEAVE A QUIET TRACE</span>
-              <p>記録が、次の一冊を選ぶ<br />手がかりになる。</p>
+              <span>KEEP, CHECK, AND FIND THE NEXT</span>
+              <p>記録して、確かめて、<br />次の一冊へ向かう。</p>
             </figcaption>
           </figure>
         </section>
 
-        <section class="today-grid">
-          <article class="status-card note-card">
-            <p class="card-label">RECENT RECORD</p>
-            <div id="last-note-content"></div>
+        <section class="mood-entry-section">
+          <article class="mood-entry-card">
+            <div>
+              <p class="card-label">BY MOOD</p>
+              <h2>気分から選ぶ</h2>
+              <p>
+                今日は探し方を変えたいときに。いまの気分をひとつ選んで、
+                偶然の一冊に寄っていけます。
+              </p>
+            </div>
+            <button class="text-button mood-entry-button" id="open-mood">気分から一冊を選ぶ</button>
           </article>
+        </section>
 
+        <section class="today-grid">
           <article class="status-card duplicate-card">
             <p class="card-label">BEFORE BUYING</p>
             <div class="status-icon">✓</div>
@@ -93,6 +101,10 @@
             <div id="duplicate-result" class="inline-result" aria-live="polite"></div>
           </article>
 
+          <article class="status-card note-card">
+            <p class="card-label">RECENT RECORD</p>
+            <div id="last-note-content"></div>
+          </article>
         </section>
 
         <section class="catalog-section" id="catalog-search-section">
@@ -106,9 +118,18 @@
           </div>
           <label class="catalog-search-box" hidden><input id="catalog-search" type="search" /></label>
           <div class="discovery-switch" id="discovery-switch" aria-label="本の選び方">
-            <button class="active" data-discovery-mode="chance">偶然にまかせる</button>
-            <button data-discovery-mode="memory">記録から選ぶ</button>
-            <button data-discovery-mode="monthly">今月の選書</button>
+            <button class="active" data-discovery-mode="memory">
+              <strong>記録から選ぶ</strong>
+              <small>読んだ傾向を手がかりに</small>
+            </button>
+            <button data-discovery-mode="chance">
+              <strong>偶然にまかせる</strong>
+              <small>棚全体から一冊</small>
+            </button>
+            <button data-discovery-mode="monthly">
+              <strong>今月の選書</strong>
+              <small>少し外側の三冊</small>
+            </button>
           </div>
           <div class="discovery-stage">
             <div class="discovery-stage-heading">

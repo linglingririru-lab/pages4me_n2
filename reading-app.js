@@ -1,6 +1,7 @@
 const STORAGE_KEY = "yohaku-reading-app-v1";
 const AUTH_SESSION_KEY = "yohaku-reading-auth-session-v1";
 const JOURNAL_AVERAGE_KEY = "yohaku-show-average-rating";
+const CHANCE_DISCOVERY_DAY_KEY = "yohaku-chance-discovery-day";
 const CATALOG_VERSION = "2026-06-20";
 const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260620-2";
 const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-3";
@@ -10,6 +11,7 @@ let activeView = "";
 let remoteSyncReady = false;
 let remoteSyncTimer = null;
 let authSession = loadAuthSession();
+let chanceDiscoveryDay = localStorage.getItem(CHANCE_DISCOVERY_DAY_KEY) || "";
 
 const STATUS_LABELS = {
   owned: "所有・未読",
@@ -135,6 +137,15 @@ function isoDate(offset = 0) {
   return `${year}-${month}-${day}`;
 }
 
+function hasChanceDiscoveryDrawnToday() {
+  return chanceDiscoveryDay === isoDate();
+}
+
+function markChanceDiscoveryDrawn() {
+  chanceDiscoveryDay = isoDate();
+  localStorage.setItem(CHANCE_DISCOVERY_DAY_KEY, chanceDiscoveryDay);
+}
+
 function seedState() {
   return {
     version: 2,
@@ -182,7 +193,7 @@ let state = loadState();
 let currentFilter = "all";
 let recommendationOffset = 0;
 let catalogDiscoveryOffset = 0;
-let discoveryMode = "memory";
+let discoveryMode = "monthly";
 let modalInitialFormState = "";
 let toastTimer;
 let selectedMood = "";
@@ -546,12 +557,13 @@ function renderDiscoveryHub() {
     monthlyOrder(recommendationPool.filter(book => normalize(book.author) !== normalize("村上春樹")), recommendationOffset),
     3
   );
+  const chanceReady = hasChanceDiscoveryDrawnToday();
   const modes = {
     chance: {
       label: "BY CHANCE",
       title: "思いがけない本から",
       description: "棚全体から、まだ登録していない本を選びます。",
-      books: [chanceBook()],
+      books: chanceReady ? [chanceBook()] : [],
       editorial: false
     },
     memory: {
@@ -579,8 +591,11 @@ function renderDiscoveryHub() {
   stage.classList.add("is-switching");
   clearTimeout(renderDiscoveryHub.switchTimer);
   renderDiscoveryHub.switchTimer = setTimeout(() => stage.classList.remove("is-switching"), 220);
-  $("#refresh-catalog-discovery").hidden = discoveryMode === "memory";
-  $("#discovery-book-list").hidden = false;
+  const showChancePrimer = discoveryMode === "chance" && !chanceReady;
+  $("#refresh-catalog-discovery").hidden = discoveryMode === "memory" || showChancePrimer;
+  $("#refresh-catalog-discovery").textContent = discoveryMode === "chance" ? "もう一度選ぶ ↻" : "選び直す ↻";
+  $("#chance-primer").hidden = !showChancePrimer;
+  $("#discovery-book-list").hidden = showChancePrimer;
   $("#discovery-book-list").classList.toggle("single", selected.books.length === 1);
   $("#discovery-book-list").innerHTML = selected.books
     .map(book => discoveryBookMarkup(book, selected.books.length === 1 ? "featured" : "", selected.editorial))
@@ -1764,6 +1779,7 @@ $$(".nav-link").forEach(button => button.addEventListener("click", () => openVie
 $("#open-add-book").addEventListener("click", () => prepareBookForm());
 $("#library-add-book").addEventListener("click", () => prepareBookForm());
 $("#hero-add-record").addEventListener("click", () => prepareRecordForm());
+$("#hero-view-journal").addEventListener("click", () => openView("journal"));
 $("#journal-add-record").addEventListener("click", () => prepareRecordForm());
 $("#export-reading-data").addEventListener("click", exportReadingData);
 $("#open-review").addEventListener("click", () => prepareReviewForm());
@@ -1803,7 +1819,12 @@ $("#library-filters").addEventListener("click", event => {
   renderLibrary();
 });
 $("#refresh-catalog-discovery").addEventListener("click", () => {
-  catalogDiscoveryOffset += 1;
+  if (discoveryMode === "monthly") recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
+  else catalogDiscoveryOffset += 1;
+  renderDiscoveryHub();
+});
+$("#chance-draw-button").addEventListener("click", () => {
+  markChanceDiscoveryDrawn();
   renderDiscoveryHub();
 });
 $$('[data-discovery-mode]').forEach(button => button.addEventListener("click", () => {

@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./reading-app.css?v=20260621-5" />
+    <link rel="stylesheet" href="./reading-app.css?v=20260628-1" />
   </head>
   <body>
     <header class="site-header">
@@ -47,6 +47,9 @@
             <div class="hero-actions">
               <button class="primary-button" id="hero-add-record">
                 読んだ本を記録する <span>＋</span>
+              </button>
+              <button class="text-button" id="hero-view-journal">
+                記録を確認する
               </button>
             </div>
             <button class="memory-line" data-action="view-journal">
@@ -118,17 +121,17 @@
           </div>
           <label class="catalog-search-box" hidden><input id="catalog-search" type="search" /></label>
           <div class="discovery-switch" id="discovery-switch" aria-label="本の選び方">
-            <button class="active" data-discovery-mode="memory">
-              <strong>記録から選ぶ</strong>
-              <small>読んだ傾向を手がかりに</small>
+            <button class="active" data-discovery-mode="monthly">
+              <strong>今月の選書</strong>
+              <small>少し外側の三冊</small>
             </button>
             <button data-discovery-mode="chance">
               <strong>偶然にまかせる</strong>
               <small>棚全体から一冊</small>
             </button>
-            <button data-discovery-mode="monthly">
-              <strong>今月の選書</strong>
-              <small>少し外側の三冊</small>
+            <button data-discovery-mode="memory">
+              <strong>記録から選ぶ</strong>
+              <small>読んだ傾向を手がかりに</small>
             </button>
           </div>
           <div class="discovery-stage">
@@ -139,6 +142,10 @@
                 <p id="discovery-mode-description">棚全体から、まだ登録していない本を選びます。</p>
               </div>
               <button class="text-button" id="refresh-catalog-discovery">選び直す ↻</button>
+            </div>
+            <div class="discovery-primer" id="chance-primer" hidden>
+              <p>今日はまだ選んでいません。まずは、ここから一冊を見つけます。</p>
+              <button class="discovery-action-button" id="chance-draw-button">今日の一冊を選ぶ</button>
             </div>
             <div class="discovery-book-list" id="discovery-book-list"></div>
           </div>
@@ -465,6 +472,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./data/books/japanese-fiction.js?v=20260617-3"></script>
     <script src="./supabase-config.js?v=20260617-3"></script>
-    <script src="./reading-app.js?v=20260621-3"></script>
+    <script src="./reading-app.js?v=20260628-1"></script>
   </body>
 </html>

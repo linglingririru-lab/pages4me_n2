@@ -1,9 +1,8 @@
 const STORAGE_KEY = "yohaku-reading-app-v1";
 const AUTH_SESSION_KEY = "yohaku-reading-auth-session-v1";
 const JOURNAL_AVERAGE_KEY = "yohaku-show-average-rating";
-const CHANCE_DISCOVERY_DAY_KEY = "yohaku-chance-discovery-day";
-const CATALOG_VERSION = "2026-06-20";
-const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260620-2";
+const CATALOG_VERSION = "2026-06-28";
+const LOCAL_CATALOG_INDEX = "./data/books/catalog-index.json?v=20260628-1";
 const LOCAL_CATALOG_FALLBACK = "./data/books/japanese-fiction.json?v=20260617-3";
 const NEW_ARRIVALS_URL = "./data/books/new-arrivals.json";
 let BOOK_CATALOG = [];
@@ -11,7 +10,6 @@ let activeView = "";
 let remoteSyncReady = false;
 let remoteSyncTimer = null;
 let authSession = loadAuthSession();
-let chanceDiscoveryDay = localStorage.getItem(CHANCE_DISCOVERY_DAY_KEY) || "";
 
 const STATUS_LABELS = {
   owned: "所有・未読",
@@ -26,6 +24,8 @@ const CATEGORY_LABELS = {
   "literary-fiction": "文学",
   mystery: "ミステリ",
   "modern-classics": "近代文学",
+  poetry: "詩",
+  tanka: "短歌",
   "world-classics": "海外文学",
   "science-fiction": "SF",
   fantasy: "幻想文学"
@@ -137,15 +137,6 @@ function isoDate(offset = 0) {
   return `${year}-${month}-${day}`;
 }
 
-function hasChanceDiscoveryDrawnToday() {
-  return chanceDiscoveryDay === isoDate();
-}
-
-function markChanceDiscoveryDrawn() {
-  chanceDiscoveryDay = isoDate();
-  localStorage.setItem(CHANCE_DISCOVERY_DAY_KEY, chanceDiscoveryDay);
-}
-
 function seedState() {
   return {
     version: 2,
@@ -200,6 +191,7 @@ let selectedMood = "";
 let currentFortuneBook = null;
 let currentPeekBook = null;
 let fortuneTimer;
+let modalScrollTop = 0;
 let showAverageRating = localStorage.getItem(JOURNAL_AVERAGE_KEY) === "true";
 
 const $ = selector => document.querySelector(selector);
@@ -498,15 +490,19 @@ function monthlyOrder(items, offset = 0) {
 
 function monthlyCatalogBooks(limit = 8) {
   const unread = BOOK_CATALOG.filter(book => {
+    if (normalize(book.author) === normalize("村上春樹")) return false;
     const libraryBook = findDuplicateByTitleAuthor(book.title, book.author);
     return libraryBook?.status !== "read" || libraryBook?.readMarkedFromShortcut;
   });
-  const source = unread.length >= limit ? unread : BOOK_CATALOG;
+  const source = unread.length >= limit
+    ? unread
+    : BOOK_CATALOG.filter(book => normalize(book.author) !== normalize("村上春樹"));
   return monthlyOrder(source, catalogDiscoveryOffset).slice(0, limit);
 }
 
 function availableDiscoveryBooks() {
   return BOOK_CATALOG.filter(book => {
+    if (normalize(book.author) === normalize("村上春樹")) return false;
     const libraryBook = findDuplicateByTitleAuthor(book.title, book.author);
     return !libraryBook || libraryBook.readMarkedFromShortcut;
   });
@@ -514,7 +510,8 @@ function availableDiscoveryBooks() {
 
 function chanceBook() {
   const source = availableDiscoveryBooks();
-  return monthlyOrder(source.length ? source : BOOK_CATALOG, catalogDiscoveryOffset)[0];
+  const fallback = BOOK_CATALOG.filter(book => normalize(book.author) !== normalize("村上春樹"));
+  return monthlyOrder(source.length ? source : fallback, catalogDiscoveryOffset)[0];
 }
 
 function memoryRecommendedBooks(limit = 3) {
@@ -557,45 +554,27 @@ function renderDiscoveryHub() {
     monthlyOrder(recommendationPool.filter(book => normalize(book.author) !== normalize("村上春樹")), recommendationOffset),
     3
   );
-  const chanceReady = hasChanceDiscoveryDrawnToday();
   const modes = {
     chance: {
-      label: "BY CHANCE",
-      title: "思いがけない本から",
-      description: "棚全体から、まだ登録していない本を選びます。",
-      books: chanceReady ? [chanceBook()] : [],
+      books: [chanceBook()],
       editorial: false
     },
     memory: {
-      label: "FROM YOUR RECORDS",
-      title: "これまでの記録を手がかりに",
-      description: state.records.length
-        ? "読書記録で多い分類をもとに、著者が重ならない本を選びました。"
-        : "記録が増えるまでは、棚全体から著者が重ならない本を選びます。",
       books: memoryRecommendedBooks(3),
       editorial: false
     },
     monthly: {
-      label: "MONTHLY SELECTION",
-      title: "いつもの棚から少し外へ",
-      description: "新しさだけに寄せず、今月手に取りたい本を選んでいます。",
       books: monthlyBooks,
       editorial: true
     }
   };
   const selected = modes[discoveryMode] || modes.chance;
-  $("#discovery-mode-label").textContent = selected.label;
-  $("#discovery-mode-title").textContent = selected.title;
-  $("#discovery-mode-description").textContent = selected.description;
   const stage = $("#catalog-search-section .discovery-stage");
+  stage.classList.add("compact");
   stage.classList.add("is-switching");
   clearTimeout(renderDiscoveryHub.switchTimer);
   renderDiscoveryHub.switchTimer = setTimeout(() => stage.classList.remove("is-switching"), 220);
-  const showChancePrimer = discoveryMode === "chance" && !chanceReady;
-  $("#refresh-catalog-discovery").hidden = discoveryMode === "memory" || showChancePrimer;
-  $("#refresh-catalog-discovery").textContent = discoveryMode === "chance" ? "もう一度選ぶ ↻" : "選び直す ↻";
-  $("#chance-primer").hidden = !showChancePrimer;
-  $("#discovery-book-list").hidden = showChancePrimer;
+  $("#discovery-book-list").hidden = false;
   $("#discovery-book-list").classList.toggle("single", selected.books.length === 1);
   $("#discovery-book-list").innerHTML = selected.books
     .map(book => discoveryBookMarkup(book, selected.books.length === 1 ? "featured" : "", selected.editorial))
@@ -804,7 +783,9 @@ function openModal(id) {
   layer.classList.add("open");
   layer.setAttribute("aria-hidden", "false");
   $$(".modal").forEach(modal => modal.classList.toggle("active", modal.id === id));
+  modalScrollTop = window.scrollY;
   document.body.classList.add("modal-open");
+  document.body.style.top = `-${modalScrollTop}px`;
   modalInitialFormState = serializeActiveModalForm();
   setTimeout(() => $(`#${id} input:not([type="hidden"]), #${id} select`)?.focus(), 80);
 }
@@ -832,6 +813,8 @@ function closeModal(force = false) {
   $("#modal-layer").setAttribute("aria-hidden", "true");
   $$(".modal").forEach(modal => modal.classList.remove("active"));
   document.body.classList.remove("modal-open");
+  document.body.style.top = "";
+  window.scrollTo(0, modalScrollTop);
   modalInitialFormState = "";
   return true;
 }
@@ -1818,17 +1801,13 @@ $("#library-filters").addEventListener("click", event => {
   $$("#library-filters button").forEach(item => item.classList.toggle("active", item === button));
   renderLibrary();
 });
-$("#refresh-catalog-discovery").addEventListener("click", () => {
-  if (discoveryMode === "monthly") recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
-  else catalogDiscoveryOffset += 1;
-  renderDiscoveryHub();
-});
-$("#chance-draw-button").addEventListener("click", () => {
-  markChanceDiscoveryDrawn();
-  renderDiscoveryHub();
-});
 $$('[data-discovery-mode]').forEach(button => button.addEventListener("click", () => {
-  discoveryMode = button.dataset.discoveryMode;
+  if (button.dataset.discoveryMode === discoveryMode) {
+    if (discoveryMode === "monthly") recommendationOffset = (recommendationOffset + 3) % recommendationPool.length;
+    if (discoveryMode === "chance") catalogDiscoveryOffset += 1;
+  } else {
+    discoveryMode = button.dataset.discoveryMode;
+  }
   renderDiscoveryHub();
 }));
 $("#duplicate-form").addEventListener("submit", event => {

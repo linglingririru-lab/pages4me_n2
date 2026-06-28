@@ -22,7 +22,12 @@ body {
   font-family: "Noto Sans JP", sans-serif;
   font-weight: 300;
 }
-body.modal-open { overflow: hidden; }
+body.modal-open {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
+}
 button, input, select, textarea { font: inherit; }
 button, a { color: inherit; }
 button { cursor: pointer; }
@@ -398,50 +403,18 @@ img { display: block; max-width: 100%; }
   background: rgba(87,101,114,.58);
 }
 .discovery-stage {
-  margin-top: 18px;
-  padding-top: 26px;
-  border-top: 1px solid rgba(105,119,132,.14);
+  margin-top: 12px;
+  padding-top: 0;
+  border-top: 0;
   transition: opacity .24s ease, transform .24s ease;
+}
+.discovery-stage.compact {
+  margin-top: 12px;
+  padding-top: 0;
 }
 .discovery-stage.is-switching {
   opacity: .72;
   transform: translateY(5px);
-}
-.discovery-stage-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 16px; }
-.discovery-stage-heading small { color: #8b97a1; font: 500 7px "DM Mono", monospace; letter-spacing: .14em; }
-.discovery-stage-heading h3 { margin: 8px 0 5px; font: 500 clamp(25px, 3vw, 38px) "Shippori Mincho", serif; }
-.discovery-stage-heading p { margin: 0; color: #75828d; font-size: 9px; line-height: 1.8; }
-.discovery-primer {
-  display: grid;
-  justify-items: start;
-  gap: 16px;
-  padding: 12px 0 26px;
-}
-.discovery-primer p {
-  margin: 0;
-  color: #75828d;
-  font-size: 10px;
-  line-height: 1.9;
-}
-.discovery-action-button {
-  min-width: 320px;
-  min-height: 62px;
-  padding: 18px 26px;
-  border: 1px solid rgba(86,102,116,.34);
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(249,251,252,.96), rgba(239,244,247,.88));
-  color: #3f5160;
-  font: 500 13px/1 "Shippori Mincho", serif;
-  letter-spacing: .1em;
-  box-shadow: 0 18px 34px rgba(97,111,124,.08);
-  transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease, color .22s ease;
-}
-.discovery-action-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(71,88,102,.46);
-  background: linear-gradient(180deg, rgba(251,252,253,.98), rgba(242,246,249,.92));
-  box-shadow: 0 22px 38px rgba(97,111,124,.1);
-  color: #334554;
 }
 .discovery-book-list { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .discovery-book-list.single { grid-template-columns: 1fr; }
@@ -1365,18 +1338,8 @@ footer p { color: #77838d; font: 400 12px "Shippori Mincho", serif; }
   }
   .discovery-switch button strong { font-size: 13px; }
   .discovery-switch button small { font-size: 7px; }
-  .discovery-stage { margin-top: 14px; padding-top: 22px; }
-  .discovery-stage-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
-  .discovery-primer { gap: 14px; padding: 6px 0 22px; }
-  .discovery-primer p { font-size: 10px; }
-  .discovery-action-button {
-    width: 100%;
-    min-height: 58px;
-    min-width: 0;
-    padding: 16px 18px;
-    font-size: 13px;
-    justify-self: stretch;
-  }
+  .discovery-stage { margin-top: 10px; padding-top: 0; }
+  .discovery-stage.compact { margin-top: 10px; padding-top: 0; }
   .discovery-book-list, .discovery-book-list.single { grid-template-columns: 1fr; }
   .discovery-book-list .discovery-book { min-height: 132px; padding: 22px 18px; border-right: 0; border-bottom: 1px solid var(--line); }
   .discovery-book-list .discovery-book:last-child { border-bottom: 0; }
@@ -1444,10 +1407,22 @@ footer p { color: #77838d; font: 400 12px "Shippori Mincho", serif; }
   .fortune-result {
     width: calc(100vw - 42px);
     align-self: start;
-    margin-top: 118px;
-    padding: 28px 4px;
+    margin-top: 0;
+    padding: 26px 0 24px;
     grid-template-columns: 1fr;
     gap: 0;
+  }
+  .draw-window.revealed {
+    place-items: center;
+    padding-top: 0;
+  }
+  .draw-window.revealed .fortune-result {
+    position: absolute;
+    top: 98px;
+    right: 21px;
+    left: 21px;
+    width: auto;
+    margin-top: 0;
   }
   .fortune-copy h3 { font-size: 25px; }
   .fortune-copy > p { margin: 13px 0; font-size: 8px; }

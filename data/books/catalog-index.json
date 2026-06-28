@@ -38,5 +38,29 @@
     "version": "2026-06-20",
     "verificationSource": "青空文庫",
     "verificationUrl": "https://www.aozora.gr.jp/"
+  },
+  {
+    "id": "japanese-modern-aozora-plus",
+    "label": "Aozora Japanese modern literature plus",
+    "path": "./data/books/japanese-modern-aozora-plus.json",
+    "version": "2026-06-28",
+    "verificationSource": "青空文庫",
+    "verificationUrl": "https://www.aozora.gr.jp/"
+  },
+  {
+    "id": "japanese-poetry-aozora-plus",
+    "label": "Aozora Japanese poetry plus",
+    "path": "./data/books/japanese-poetry-aozora-plus.json",
+    "version": "2026-06-28",
+    "verificationSource": "青空文庫",
+    "verificationUrl": "https://www.aozora.gr.jp/"
+  },
+  {
+    "id": "japanese-tanka-aozora-plus",
+    "label": "Aozora Japanese tanka plus",
+    "path": "./data/books/japanese-tanka-aozora-plus.json",
+    "version": "2026-06-28",
+    "verificationSource": "青空文庫",
+    "verificationUrl": "https://www.aozora.gr.jp/"
   }
 ]

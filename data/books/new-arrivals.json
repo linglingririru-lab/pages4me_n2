@@ -1,9 +1,23 @@
 {
   "month": "2026-08",
-  "updatedAt": "2026-08-05T10:14:45Z",
+  "updatedAt": "2026-08-08T02:22:55Z",
   "source": "国立国会図書館サーチ",
   "sourceUrl": "https://ndlsearch.ndl.go.jp/",
   "books": [
+    {
+      "title": "ともぐい",
+      "author": "河﨑秋子",
+      "genre": "小説",
+      "date": "2026-08",
+      "tone": "今月 文学",
+      "description": "新潮社から8月刊行。次に読む本の候補へ。",
+      "color": "#d5dce1",
+      "isbn": "978-4-10-107051-3",
+      "publisher": "新潮社",
+      "source": "国立国会図書館サーチ",
+      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034833034",
+      "verified": true
+    },
     {
       "title": "リリアン",
       "author": "岸政彦",
@@ -11,25 +25,11 @@
       "date": "2026-08",
       "tone": "今月 文学",
       "description": "新潮社から8月刊行。次に読む本の候補へ。",
-      "color": "#d5dce1",
+      "color": "#c8d2dc",
       "isbn": "978-4-10-107071-1",
       "publisher": "新潮社",
       "source": "国立国会図書館サーチ",
       "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034833035",
-      "verified": true
-    },
-    {
-      "title": "追放された書記官は、〈世界の仕様書〉を書き換え無双する",
-      "author": "九条蓮",
-      "genre": "小説",
-      "date": "2026-08",
-      "tone": "今月 文学",
-      "description": "双葉社から8月刊行。次に読む本の候補へ。",
-      "color": "#c8d2dc",
-      "isbn": "978-4-575-24909-5",
-      "publisher": "双葉社",
-      "source": "国立国会図書館サーチ",
-      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034833110",
       "verified": true
     },
     {
@@ -47,17 +47,17 @@
       "verified": true
     },
     {
-      "title": "色ざんげ",
-      "author": "宇野千代",
+      "title": "名探偵のいけにえ : 人民教会殺人事件",
+      "author": "白井智之",
       "genre": "小説",
       "date": "2026-08",
       "tone": "今月 文学",
       "description": "新潮社から8月刊行。次に読む本の候補へ。",
       "color": "#d8dee2",
-      "isbn": "978-4-10-102704-3",
+      "isbn": "978-4-10-104482-8",
       "publisher": "新潮社",
       "source": "国立国会図書館サーチ",
-      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034833031",
+      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034833033",
       "verified": true
     }
   ]

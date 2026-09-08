@@ -1,6 +1,6 @@
 {
   "month": "2026-09",
-  "updatedAt": "2026-09-05T04:34:05Z",
+  "updatedAt": "2026-09-08T04:41:52Z",
   "source": "国立国会図書館サーチ",
   "sourceUrl": "https://ndlsearch.ndl.go.jp/",
   "books": [
@@ -33,31 +33,31 @@
       "verified": true
     },
     {
+      "title": "ウバステ",
+      "author": "真梨幸子",
+      "genre": "小説",
+      "date": "2026-09",
+      "tone": "今月 文学",
+      "description": "小学館から9月刊行。次に読む本の候補へ。",
+      "color": "#cfd0dc",
+      "isbn": "978-4-09-407595-3",
+      "publisher": "小学館",
+      "source": "国立国会図書館サーチ",
+      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034893072",
+      "verified": true
+    },
+    {
       "title": "一夜",
       "author": "今野敏",
       "genre": "小説",
       "date": "2026-09",
       "tone": "今月 文学",
       "description": "新潮社から9月刊行。次に読む本の候補へ。",
-      "color": "#cfd0dc",
+      "color": "#d8dee2",
       "isbn": "978-4-10-132167-7",
       "publisher": "新潮社",
       "source": "国立国会図書館サーチ",
       "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034881113",
-      "verified": true
-    },
-    {
-      "title": "人魚屋敷の殺人",
-      "author": "大神晃",
-      "genre": "小説",
-      "date": "2026-09",
-      "tone": "今月 文学",
-      "description": "新潮社から9月刊行。次に読む本の候補へ。",
-      "color": "#d8dee2",
-      "isbn": "978-4-10-180342-5",
-      "publisher": "新潮社",
-      "source": "国立国会図書館サーチ",
-      "sourceUrl": "https://ndlsearch.ndl.go.jp/books/R100000002-I034866090",
       "verified": true
     }
   ]
